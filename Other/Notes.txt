@@ -1,0 +1,113 @@
+
+// Initialize LOCAL postgresql connection
+// -----------------------------------------------------------------------------------------------------------
+
+	psql -U BBassett DeSynPUF_DB
+
+
+// Initialize AZURE postgresql connection
+// -----------------------------------------------------------------------------------------------------------
+
+	psql "host=<server> port=<port> user=<admin-user> dbname=postgres sslmode=require"
+
+	
+// Close postgresql
+// -----------------------------------------------------------------------------------------------------------
+
+	\q
+
+
+// Delete a table
+// -----------------------------------------------------------------------------------------------------------
+
+	DROP TABLE IF EXISTS Prescription_Drug_Events;
+
+
+// Delete all rows in a table
+// -----------------------------------------------------------------------------------------------------------
+
+	TRUNCATE TABLE beneficiary_summary_2008;
+
+
+// List first 10 results in a table
+// -----------------------------------------------------------------------------------------------------------
+
+	SELECT * FROM ndc_package LIMIT 10;
+
+
+// List all functions in a schema
+// -----------------------------------------------------------------------------------------------------------
+
+	\df public.*
+
+
+// Reset entire schema
+// -----------------------------------------------------------------------------------------------------------
+
+
+	DROP SCHEMA public CASCADE;
+	CREATE SCHEMA public;
+
+
+// Create A Backup
+// -----------------------------------------------------------------------------------------------------------
+
+//	command promt tools, not for use within postgresql itself
+//	single database only
+	
+	pg_dump -v -U BBassett -d DeSynPUF_DB -F tar -f f:/MedicareAnalysis/all_db_backup.tar
+	
+
+
+// For Loop in Postgresql
+// -----------------------------------------------------------------------------------------------------------
+
+
+	DO $$
+
+	DECLARE
+		counter INT := 0;
+		
+	BEGIN
+	  LOOP
+		counter = counter + 1;
+		RAISE notice '%', counter;
+		IF counter = 20 THEN
+			EXIT;
+		END IF;
+	  END LOOP;
+	END;
+
+	$$;
+	
+	
+// Custom Function takes a table and column name and returns a table
+// -----------------------------------------------------------------------------------------------------------
+
+	CREATE OR REPLACE FUNCTION convert_desynpuf_id (
+	   table_name VARCHAR,
+	   col_name VARCHAR
+	)
+
+	RETURNS TABLE ( 
+		birth_dt DATE
+	)
+
+	LANGUAGE plpgsql
+
+	AS $$
+
+	DECLARE
+
+		s TEXT;
+		
+	BEGIN
+		
+		s := format('SELECT %I FROM %I LIMIT 5;', col_name, table_name);
+
+		RETURN QUERY EXECUTE s;
+
+	END
+	$$;
+
+	SELECT * FROM convert_desynpuf_id ('beneficiary_summary_2008', 'bene_birth_dt');
