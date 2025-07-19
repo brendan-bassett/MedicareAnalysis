@@ -6,4 +6,4 @@ Reference_Books/*
 Other/Credentials.txt
 Other/GitCheatSheet.jpg
 Other/pgpass.config
-all_db_backup.tar
+PSQL_Local/all_db_backup.tar

@@ -1,4 +1,37 @@
 
+
+// Git Commands
+// -----------------------------------------------------------------------------------------------------------------------------
+
+	Navigate to project directory:
+
+		cd F:/MedicareAnalysis
+		
+	Stage all files:
+
+		git add .
+		
+	Commit all staged files to git:
+
+		git commit -m "<commit_message>"
+		
+	Push all local branch changes to remote branch:
+
+		git push -u origin master
+		
+	Create file:
+
+		touch <file_name>
+		
+	Rename/Move file within git repository:
+
+		git mv <existing_path> <new_path>
+		
+	Stop tracking a folder and files recursively from branch:
+
+		git rm -r --cached <folder>
+
+
 // Initialize LOCAL postgresql connection
 // -----------------------------------------------------------------------------------------------------------
 
