@@ -43,6 +43,14 @@
 
 	psql "host=<server> port=<port> user=<admin-user> dbname=postgres sslmode=require"
 
+
+// Connect and query with Azure CLI with Azure Database for PostgreSQL flexible server
+// -----------------------------------------------------------------------------------------------------------
+
+	az postgres flexible-server connect \
+		-n Azure_DeSynPUF -u BBassett -p "MusicE74!" -d DeSynPUF_DB \
+		--interactive
+
 	
 // Close postgresql
 // -----------------------------------------------------------------------------------------------------------

@@ -1,2 +1,2 @@
-SELECT * FROM icd9 LIMIT 50;
 
+SELECT * FROM pg_replication_slots;
