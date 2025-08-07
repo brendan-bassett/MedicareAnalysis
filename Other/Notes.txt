@@ -47,9 +47,9 @@
 // Connect and query with Azure CLI with Azure Database for PostgreSQL flexible server
 // -----------------------------------------------------------------------------------------------------------
 
-	az postgres flexible-server connect \
-		-n Azure_DeSynPUF -u BBassett -p "MusicE74!" -d DeSynPUF_DB \
-		--interactive
+	
+	az postgres flexible-server connect -n medicare-analysis -u BBassett -p "MusicE74!" -d medicare_analysis --interactive
+
 
 	
 // Close postgresql
