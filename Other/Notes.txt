@@ -48,7 +48,7 @@
 // -----------------------------------------------------------------------------------------------------------
 
 	
-	az postgres flexible-server connect -n medicare-analysis -u BBassett -p "MusicE74!" -d medicare_analysis --interactive
+	az postgres flexible-server connect -n <server-name> -u <username> -p "<password>" -d <database-name> --interactive
 
 
 	
