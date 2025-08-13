@@ -327,3 +327,29 @@ SELECT * FROM icd9_excluded;
 
 DROP TABLE icd9_included;
 DROP TABLE icd9_excluded;
+
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Add new column primary_key to each table
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+ALTER TABLE hcpcs17 ADD COLUMN primary_key SERIAL PRIMARY KEY;
+ALTER TABLE rx_drug_events ADD COLUMN primary_key SERIAL PRIMARY KEY;
+ALTER TABLE cms_rvu_2010 ADD COLUMN primary_key SERIAL PRIMARY KEY;
+ALTER TABLE beneficiary_summary_2008 ADD COLUMN primary_key SERIAL PRIMARY KEY;
+ALTER TABLE beneficiary_summary_2009 ADD COLUMN primary_key SERIAL PRIMARY KEY;
+ALTER TABLE beneficiary_summary_2010 ADD COLUMN primary_key SERIAL PRIMARY KEY;
+ALTER TABLE carrier_claims ADD COLUMN primary_key SERIAL PRIMARY KEY;
+ALTER TABLE icd9 ADD COLUMN primary_key SERIAL PRIMARY KEY;
+ALTER TABLE inpatient_claims ADD COLUMN primary_key SERIAL PRIMARY KEY;
+ALTER TABLE ndc_package ADD COLUMN primary_key SERIAL PRIMARY KEY;
+ALTER TABLE ndc_product ADD COLUMN primary_key SERIAL PRIMARY KEY;
+ALTER TABLE outpatient_claims ADD COLUMN primary_key SERIAL PRIMARY KEY;
+
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Run cleanup of dead tuples & maximize efficiency
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+VACUUM FULL ANALYZE;
