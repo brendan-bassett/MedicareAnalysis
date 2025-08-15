@@ -504,7 +504,7 @@ CREATE TABLE rx_drug_events (
 	desynpuf_id VARCHAR(16), 
 	pde_id BIGINT, 
 	srvc_dt DATE, 
-	prod_srvc_id CHAR(11), 
+	prod_srvc_id CHAR(11), 			-- Exceeds the limits of bigint. Must be char
 	qty_dspnsd_num NUMERIC(6, 3), 	-- 0.000 precision 
 	days_suply_num SMALLINT, 
 	ptnt_pay_amt NUMERIC(8, 2), 
