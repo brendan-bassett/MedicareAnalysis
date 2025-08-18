@@ -503,7 +503,7 @@ CREATE TABLE rx_drug_events (
 	
 	desynpuf_id VARCHAR(16), 
 	pde_id BIGINT, 
-	srvc_dt DATE, 
+	srvc_dt DATE, 					-- RENAMED to ndc11 for National Drug Code (NDC) 11-digit standard
 	prod_srvc_id CHAR(11), 			-- Exceeds the limits of bigint. Must be char
 	qty_dspnsd_num NUMERIC(6, 3), 	-- 0.000 precision 
 	days_suply_num SMALLINT, 
