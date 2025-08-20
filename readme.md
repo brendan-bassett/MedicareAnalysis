@@ -19,3 +19,4 @@ Specific versions for the CPT, ICD-9, and NDC codes are not specified. The Medic
 **Alpha-Numeric HCPS File Content** - http://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets/Alpha-Numeric-HCPCS.html
 **National Drug Code (NDC) Directory** - https://www.fda.gov/drugs/drug-approvals-and-databases/national-drug-code-directory
 **ICD-9 Code Lists** - https://www.cms.gov/medicare/coordination-benefits-recovery/overview/icd-code-lists
+**SSA County Codes** - https://www.cms.gov/data-research/statistics-trends-and-reports/health-plans-reports-files-data/state-county

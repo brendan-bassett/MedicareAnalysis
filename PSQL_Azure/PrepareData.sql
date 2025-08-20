@@ -354,6 +354,8 @@ ALTER TABLE inpatient_claims ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE ndc_package ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE ndc_product ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE outpatient_claims ADD COLUMN primary_key SERIAL PRIMARY KEY;
+ALTER TABLE state_codes ADD COLUMN primary_key SERIAL PRIMARY KEY;
+ALTER TABLE county_codes ADD COLUMN primary_key SERIAL PRIMARY KEY;
 
 
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------

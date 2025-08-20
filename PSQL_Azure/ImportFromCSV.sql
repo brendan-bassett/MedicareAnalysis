@@ -637,3 +637,31 @@ CREATE TABLE cms_rvu_2010 (
 	
 );
 
+
+/*
+-----------------------------------------------------------------------------------------------------------------------
+   Import State & County Codes
+-----------------------------------------------------------------------------------------------------------------------
+*/
+
+CREATE TABLE state_codes (
+	
+	state_code SMALLINT, 
+	abbreviation VARCHAR(2),
+	state VARCHAR
+);
+	
+
+CREATE TABLE county_codes (
+	
+	state VARCHAR(2), 
+	county VARCHAR, 
+	eligibles INT,
+	enrollees INT,
+	penetration NUMERIC(8, 2),
+	part_a_aged NUMERIC(8, 2), 
+	part_b_aged NUMERIC(8, 2), 
+	part_ab_aged NUMERIC(8, 2),
+    ssa_county_code VARCHAR(5)
+);
+	
