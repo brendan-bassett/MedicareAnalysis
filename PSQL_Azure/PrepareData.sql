@@ -366,6 +366,262 @@ ALTER TABLE rx_drug_events RENAME COLUMN prod_srvc_id TO ndc11;
 
 
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Add Beneficiary Summary ID to DeSynPUF dataset
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+--      List and count every hcpcs code listed in outpatient_claims that does not correspond to an etry in the hcpcs17 table
+
+SELECT oc.hcpcs_cd_1, COUNT(*) FROM outpatient_claims oc LEFT JOIN hcpcs17 h ON oc.hcpcs_cd_1 = h.hcpc WHERE h.hcpc IS NULL GROUP BY oc.hcpcs_cd_1;
+
+--      That's a lot of entries that do not occur in hcpcs 17
+
+--      Show all the hcpcs codes from hcpcs17 table that DO NOT appear in the cms_rvu table
+
+SELECT h.hcpc, h.desc_long FROM hcpcs17 h LEFT JOIN cms_rvu_2010 c ON h.hcpc = c.hcpcs WHERE c.hcpcs IS NULL GROUP BY h.hcpc, h.desc_long;
+
+--      Count how many entries in the hcpcs17 table DO NOT appear in the cms_rvu
+
+SELECT COUNT(*) FROM hcpcs17 h LEFT JOIN cms_rvu_2010 c ON h.hcpc = c.hcpcs WHERE c.hcpcs IS NULL;
+
+--      RESULT: 3767
+
+--      Show all the hcpcs codes from hcpcs17 table that do appear in the cms_rvu table
+
+SELECT h.hcpc, h.desc_long FROM hcpcs17 h INNER JOIN cms_rvu_2010 c ON h.hcpc = c.hcpcs GROUP BY h.hcpc, h.desc_long;
+
+--      Count how many entries in the hcpcs17 table do appear in the cms_rvu
+
+SELECT COUNT(*) FROM hcpcs17 h INNER JOIN cms_rvu_2010 c ON h.hcpc = c.hcpcs;
+
+--      RESULT: 2775
+
+--      There is a lot of overlap between the hcpcs17 list of hcpcs codes, but it doesnt cover all the codes present 
+--      in the Medicare DeSynPUF dataset.
+
+--      Show and count each hcpcs code from outpatient claims that does not appear in cms_rvu
+
+SELECT c.hcpcs, c.description, COUNT(*) FROM outpatient_claims oc RIGHT JOIN cms_rvu_2010 c ON oc.hcpcs_cd_1 = c.hcpcs WHERE c.hcpcs IS NULL GROUP BY c.hcpcs, c.description;
+
+--      RESULT: -- no rows --
+
+--      The cms_rvu table has hcpcs descriptions for every code in the Medicare DeSynPUF dataset
+
+--      Just to double-check. Let's count the number of hcpcs codes in the outpatient claims that do not appear in the cms_rvu
+
+SELECT COUNT(*) FROM outpatient_claims oc RIGHT JOIN cms_rvu_2010 c ON oc.hcpcs_cd_1 = c.hcpcs WHERE c.hcpcs IS NULL;
+
+--      RESULT: 0
+
+
+--      --------------------------------------------
+
+--      Now the cms_rvu dataset may be comprehensive, but the descriptions are short and not as easy to understand
+--      as those in the hcpcs17 data. We should combine the two datasets.
+
+
+--      Populate a new hcpcs table with the descriptions from hcpcs17
+
+CREATE TABLE hcpcs_desc (
+    hcpcs VARCHAR(5) UNIQUE,
+    desc_short VARCHAR,
+    desc_long VARCHAR
+);
+
+INSERT INTO hcpcs_desc (hcpcs, desc_short, desc_long)
+SELECT h.hcpc, h.desc_short, h.desc_long
+FROM hcpcs17 h;
+
+
+--      Add any additional hcpcs codes and descriptions from cms_rvu that are not already in the description list
+
+INSERT INTO hcpcs_desc (hcpcs, desc_short, desc_long)
+SELECT cr.hcpcs, cr.description, cr.description
+FROM cms_rvu_2010 cr
+ON CONFLICT (hcpcs)
+DO NOTHING;
+
+--      Get rid of the old hcpcs17 table. It doesnt have any other information we will need.
+
+DROP TABLE hcpcs17;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Add Beneficiary Summary ID to DeSynPUF dataset
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--      Relationships from desynpuf_id to multiple beneficiary summary tables from outpatient_claims and similar are preventing
+--      Power BI from creating other relationships. The solution here is to create a new beneficiary summary id that is unique to
+--      each year's patient beneficiary summary.
+
+
+-- Create unique Beneficiary Summary ID for each entry in Beneficiary Summaries
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ALTER TABLE beneficiary_summary_2008 DROP COLUMN IF EXISTS primary_key;
+ALTER TABLE beneficiary_summary_2008 ADD COLUMN bs_id INTEGER;
+
+CREATE SEQUENCE bs_id_seq
+INCREMENT 1
+START 1
+OWNED BY beneficiary_summary_2008.bs_id;
+
+UPDATE beneficiary_summary_2008
+SET bs_id = nextval('bs_id_seq');
+
+SELECT desynpuf_id, bs_id FROM beneficiary_summary_2008 ORDER BY bs_id LIMIT 20;
+
+ALTER TABLE beneficiary_summary_2008 ADD PRIMARY KEY (bs_id);
+
+-- --------------------------
+
+ALTER TABLE beneficiary_summary_2009 DROP COLUMN IF EXISTS primary_key;
+ALTER TABLE beneficiary_summary_2009 ADD COLUMN bs_id INTEGER;
+
+ALTER SEQUENCE bs_id_seq OWNED BY beneficiary_summary_2009.bs_id;
+
+UPDATE beneficiary_summary_2009
+SET bs_id = nextval('bs_id_seq');
+
+ALTER TABLE beneficiary_summary_2009 ADD PRIMARY KEY (bs_id);
+
+SELECT desynpuf_id, bs_id FROM beneficiary_summary_2009 ORDER BY bs_id LIMIT 20;
+
+-- --------------------------
+
+ALTER TABLE beneficiary_summary_2010 DROP COLUMN IF EXISTS primary_key;
+ALTER TABLE beneficiary_summary_2010 ADD COLUMN bs_id INTEGER;
+
+ALTER SEQUENCE bs_id_seq OWNED BY beneficiary_summary_2010.bs_id;
+
+UPDATE beneficiary_summary_2010
+SET bs_id = nextval('bs_id_seq');
+
+ALTER TABLE beneficiary_summary_2010 ADD PRIMARY KEY (bs_id);
+
+SELECT desynpuf_id, bs_id FROM beneficiary_summary_2010 ORDER BY bs_id LIMIT 20;
+
+-- --------------------------
+
+DROP SEQUENCE IF EXISTS bs_id_seq;
+
+
+-- Add the Beneficiary Summary ID for each other table in the DeSynPUF
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ALTER TABLE rx_drug_events ADD COLUMN bs_id INTEGER;
+
+UPDATE rx_drug_events
+SET bs_id = bs.bs_id
+FROM beneficiary_summary_2008 bs
+WHERE DATE_PART('year', srvc_dt) = 2008.0
+AND rx_drug_events.desynpuf_id = bs.desynpuf_id;
+
+UPDATE rx_drug_events
+SET bs_id = bs.bs_id
+FROM beneficiary_summary_2009 bs
+WHERE DATE_PART('year', srvc_dt) = 2009.0
+AND rx_drug_events.desynpuf_id = bs.desynpuf_id;
+
+UPDATE rx_drug_events
+SET bs_id = bs.bs_id
+FROM beneficiary_summary_2010 bs
+WHERE DATE_PART('year', srvc_dt) = 2010.0
+AND rx_drug_events.desynpuf_id = bs.desynpuf_id;
+
+-- --------------------------
+
+ALTER TABLE inpatient_claims ADD COLUMN bs_id INTEGER;
+
+UPDATE inpatient_claims
+SET bs_id = bs.bs_id
+FROM beneficiary_summary_2008 bs
+WHERE DATE_PART('year', clm_from_dt) = 2008.0
+AND inpatient_claims.desynpuf_id = bs.desynpuf_id;
+
+UPDATE inpatient_claims
+SET bs_id = bs.bs_id
+FROM beneficiary_summary_2009 bs
+WHERE DATE_PART('year', clm_from_dt) = 2009.0
+AND inpatient_claims.desynpuf_id = bs.desynpuf_id;
+
+UPDATE inpatient_claims
+SET bs_id = bs.bs_id
+FROM beneficiary_summary_2010 bs
+WHERE DATE_PART('year', clm_from_dt) = 2010.0
+AND inpatient_claims.desynpuf_id = bs.desynpuf_id;
+
+-- --------------------------
+
+ALTER TABLE outpatient_claims ADD COLUMN bs_id INTEGER;
+
+UPDATE outpatient_claims
+SET bs_id = bs.bs_id
+FROM beneficiary_summary_2008 bs
+WHERE DATE_PART('year', clm_from_dt) = 2008.0
+AND outpatient_claims.desynpuf_id = bs.desynpuf_id;
+
+UPDATE outpatient_claims
+SET bs_id = bs.bs_id
+FROM beneficiary_summary_2009 bs
+WHERE DATE_PART('year', clm_from_dt) = 2009.0
+AND outpatient_claims.desynpuf_id = bs.desynpuf_id;
+
+UPDATE outpatient_claims
+SET bs_id = bs.bs_id
+FROM beneficiary_summary_2010 bs
+WHERE DATE_PART('year', clm_from_dt) = 2010.0
+AND outpatient_claims.desynpuf_id = bs.desynpuf_id;
+
+-- --------------------------
+
+ALTER TABLE carrier_claims ADD COLUMN bs_id INTEGER;
+
+UPDATE carrier_claims
+SET bs_id = bs.bs_id
+FROM beneficiary_summary_2008 bs
+WHERE DATE_PART('year', clm_from_dt) = 2008.0
+AND carrier_claims.desynpuf_id = bs.desynpuf_id;
+
+UPDATE carrier_claims
+SET bs_id = bs.bs_id
+FROM beneficiary_summary_2009 bs
+WHERE DATE_PART('year', clm_from_dt) = 2009.0
+AND carrier_claims.desynpuf_id = bs.desynpuf_id;
+
+UPDATE carrier_claims
+SET bs_id = bs.bs_id
+FROM beneficiary_summary_2010 bs
+WHERE DATE_PART('year', clm_from_dt) = 2010.0
+AND carrier_claims.desynpuf_id = bs.desynpuf_id;
+
+
+-- Combine the Beneficiary Summary tables
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE TABLE beneficiary_summary_merged AS TABLE beneficiary_summary_2008;
+
+ALTER TABLE beneficiary_summary_merged ADD COLUMN year SMALLINT;
+
+UPDATE beneficiary_summary_merged (year)
+SET year = 2008;
+
+INSERT INTO beneficiary_summary_merged
+SELECT *, year = 2009
+FROM beneficiary_summary_2009;
+
+INSERT INTO beneficiary_summary_merged
+SELECT *, year = 2010
+FROM beneficiary_summary_2010;
+
+
+-- Get rid of the old de_syn_puf id and the old beneficiary summary tables
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+DROP TABLE beneficiary_summary_2008;
+DROP TABLE beneficiary_summary_2009;
+DROP TABLE beneficiary_summary_2010;
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Run cleanup of dead tuples & maximize efficiency
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
