@@ -285,12 +285,6 @@ SET ndc_package11 = seg_1 || seg_2 || '0' || seg_3
 WHERE LENGTH(seg_3) = 1;
 
 
--- remove dashes in the NDC-10 column, then rename
-
-UPDATE ndc_package
-SET ndc_package10 = seg_1 || seg_2 || seg_3;
-
-
 -- drop all single segment columns that were created for conversion
 
 ALTER TABLE ndc_package
