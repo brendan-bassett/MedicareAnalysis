@@ -10,4 +10,7 @@
 
 --      RESULT: 244528 results match between rx_drug_events and ndc_package
 
-SELECT LENGTH(ndc11), COUNT(LENGTH(ndc11)) FROM rx_drug_events GROUP BY LENGTH(ndc11);
+-- SELECT LENGTH(ndc11), COUNT(LENGTH(ndc11)) FROM rx_drug_events GROUP BY LENGTH(ndc11);
+
+-- SELECT tablename FROM pg_tables WHERE schemaname = 'public';
+

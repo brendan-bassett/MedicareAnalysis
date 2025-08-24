@@ -336,6 +336,12 @@ DROP TABLE icd9_included;
 DROP TABLE icd9_excluded;
 
 
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Rename column in rx drug events for greater clarity
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+ALTER TABLE rx_drug_events RENAME COLUMN prod_srvc_id TO ndc11;
 
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Add new column primary_key to each table
@@ -345,9 +351,6 @@ DROP TABLE icd9_excluded;
 ALTER TABLE hcpcs17 ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE rx_drug_events ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE cms_rvu_2010 ADD COLUMN primary_key SERIAL PRIMARY KEY;
-ALTER TABLE beneficiary_summary_2008 ADD COLUMN primary_key SERIAL PRIMARY KEY;
-ALTER TABLE beneficiary_summary_2009 ADD COLUMN primary_key SERIAL PRIMARY KEY;
-ALTER TABLE beneficiary_summary_2010 ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE carrier_claims ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE icd9 ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE inpatient_claims ADD COLUMN primary_key SERIAL PRIMARY KEY;
@@ -357,12 +360,6 @@ ALTER TABLE outpatient_claims ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE state_codes ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE county_codes ADD COLUMN primary_key SERIAL PRIMARY KEY;
 
-
--- ---------------------------------------------------------------------------------------------------------------------------------------------------------
--- Rename column in rx drug events for greater clarity
--- ---------------------------------------------------------------------------------------------------------------------------------------------------------
-
-ALTER TABLE rx_drug_events RENAME COLUMN prod_srvc_id TO ndc11;
 
 
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -595,23 +592,34 @@ WHERE DATE_PART('year', clm_from_dt) = 2010.0
 AND carrier_claims.desynpuf_id = bs.desynpuf_id;
 
 
--- Combine the Beneficiary Summary tables
+-- Combine the Beneficiary Summary tables into one table
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
+DROP TABLE IF EXISTS beneficiary_summary_merged;
+
 CREATE TABLE beneficiary_summary_merged AS TABLE beneficiary_summary_2008;
+ALTER TABLE beneficiary_summary_merged ADD COLUMN bs_year SMALLINT;
 
-ALTER TABLE beneficiary_summary_merged ADD COLUMN year SMALLINT;
 
-UPDATE beneficiary_summary_merged (year)
-SET year = 2008;
+UPDATE beneficiary_summary_merged
+SET bs_year = 2008
+WHERE bs_year IS NULL;
 
 INSERT INTO beneficiary_summary_merged
-SELECT *, year = 2009
+SELECT *
 FROM beneficiary_summary_2009;
 
+UPDATE beneficiary_summary_merged
+SET bs_year = 2009
+WHERE bs_year IS NULL;
+
 INSERT INTO beneficiary_summary_merged
-SELECT *, year = 2010
+SELECT *
 FROM beneficiary_summary_2010;
+
+UPDATE beneficiary_summary_merged
+SET bs_year = 2010
+WHERE bs_year IS NULL;
 
 
 -- Get rid of the old de_syn_puf id and the old beneficiary summary tables
@@ -620,6 +628,8 @@ FROM beneficiary_summary_2010;
 DROP TABLE beneficiary_summary_2008;
 DROP TABLE beneficiary_summary_2009;
 DROP TABLE beneficiary_summary_2010;
+
+ALTER TABLE beneficiary_summary_merged RENAME TO beneficiary_summaries;
 
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Run cleanup of dead tuples & maximize efficiency
