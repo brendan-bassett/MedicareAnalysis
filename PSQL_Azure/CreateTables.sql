@@ -516,11 +516,11 @@ CREATE TABLE rx_drug_events (
 -- 	Create NDC Descriptions Tables
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
-CREATE TABLE ndc_package (
+CREATE TABLE ndc2025_package (
 	
 	product_id VARCHAR(47), 
 	product_ndc VARCHAR(10), 
-	ndc_package_code VARCHAR(12),
+	ndc2025_package_code VARCHAR(12),
 	package_description VARCHAR(2429), 
 	start_marketing_date DATE, 
 	end_marketing_date DATE,
@@ -528,7 +528,7 @@ CREATE TABLE ndc_package (
 	sample_package CHAR(1)
 );
 
-CREATE TABLE ndc_product (
+CREATE TABLE ndc2025_product (
 	
 	product_id VARCHAR(47), 
 	product_ndc VARCHAR(10), 

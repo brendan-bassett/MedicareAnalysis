@@ -239,61 +239,61 @@ SELECT * FROM convert_to_boolean ('beneficiary_summary_2010', 'sp_strketia', 1, 
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-ALTER TABLE ndc_package
-RENAME COLUMN ndc_package_code TO ndc_package10;
+ALTER TABLE ndc2025_package
+RENAME COLUMN ndc2025_package_code TO ndc2025_package10;
 
 
 -- divide the NDC-10 package code into the 3 segments
 
-ALTER TABLE ndc_package
+ALTER TABLE ndc2025_package
 ADD seg_1 VARCHAR(5);
 
-UPDATE ndc_package
-SET seg_1 = SUBSTRING( ndc_package10 FROM '^[0-9]*') ;
+UPDATE ndc2025_package
+SET seg_1 = SUBSTRING( ndc2025_package10 FROM '^[0-9]*') ;
 
 
-ALTER TABLE ndc_package
+ALTER TABLE ndc2025_package
 ADD seg_2 VARCHAR(4);
 
-UPDATE ndc_package
-SET seg_2 = TRIM(BOTH '-' FROM SUBSTRING( ndc_package10 FROM '-[0-9]*-'));
+UPDATE ndc2025_package
+SET seg_2 = TRIM(BOTH '-' FROM SUBSTRING( ndc2025_package10 FROM '-[0-9]*-'));
 
 
-ALTER TABLE ndc_package
+ALTER TABLE ndc2025_package
 ADD seg_3 VARCHAR(2);
 
-UPDATE ndc_package
-SET seg_3 = SUBSTRING( ndc_package10 FROM '[0-9]*$');
+UPDATE ndc2025_package
+SET seg_3 = SUBSTRING( ndc2025_package10 FROM '[0-9]*$');
 
 
 
 -- combine the 3 segments into NDC-11
 
-ALTER TABLE ndc_package
-ADD ndc_package11 VARCHAR(13);
+ALTER TABLE ndc2025_package
+ADD ndc2025_package11 VARCHAR(13);
 
-UPDATE ndc_package
-SET ndc_package11 = '0' || seg_1 || seg_2 || seg_3
+UPDATE ndc2025_package
+SET ndc2025_package11 = '0' || seg_1 || seg_2 || seg_3
 WHERE LENGTH(seg_1) = 4;
 
-UPDATE ndc_package
-SET ndc_package11 = seg_1 || '0' || seg_2 || seg_3
+UPDATE ndc2025_package
+SET ndc2025_package11 = seg_1 || '0' || seg_2 || seg_3
 WHERE LENGTH(seg_2) = 3;
 
-UPDATE ndc_package
-SET ndc_package11 = seg_1 || seg_2 || '0' || seg_3
+UPDATE ndc2025_package
+SET ndc2025_package11 = seg_1 || seg_2 || '0' || seg_3
 WHERE LENGTH(seg_3) = 1;
 
 
 -- drop all single segment columns that were created for conversion
 
-ALTER TABLE ndc_package
+ALTER TABLE ndc2025_package
 DROP COLUMN seg_1;
 
-ALTER TABLE ndc_package
+ALTER TABLE ndc2025_package
 DROP COLUMN seg_2;
 
-ALTER TABLE ndc_package
+ALTER TABLE ndc2025_package
 DROP COLUMN seg_3;
 
 
@@ -348,8 +348,8 @@ ALTER TABLE cms_rvu_2010 ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE carrier_claims ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE icd9 ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE inpatient_claims ADD COLUMN primary_key SERIAL PRIMARY KEY;
-ALTER TABLE ndc_package ADD COLUMN primary_key SERIAL PRIMARY KEY;
-ALTER TABLE ndc_product ADD COLUMN primary_key SERIAL PRIMARY KEY;
+ALTER TABLE ndc2025_package ADD COLUMN primary_key SERIAL PRIMARY KEY;
+ALTER TABLE ndc2025_product ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE outpatient_claims ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE state_codes ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE county_codes ADD COLUMN primary_key SERIAL PRIMARY KEY;

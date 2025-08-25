@@ -45,3 +45,6 @@ LEFT JOIN ndc_package n ON rde.ndc11 = n.ndc_package11
 WHERE n.ndc_package11 IS NULL 
 LIMIT 500;
 */
+
+
+SELECT COUNT(*) FROM rx_drug_events rde LEFT JOIN ndc2010 n ON rde.ndc11 = n.ndc11 WHERE n.ndc11 IS NULL;

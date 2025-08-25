@@ -52,8 +52,8 @@ ALTER TABLE carrier_claims OWNER TO ms_fabric_user;
 ALTER TABLE hcpcs17 OWNER TO ms_fabric_user;
 ALTER TABLE icd9 OWNER TO ms_fabric_user;
 ALTER TABLE inpatient_claims OWNER TO ms_fabric_user;
-ALTER TABLE ndc_package OWNER TO ms_fabric_user;
-ALTER TABLE ndc_product OWNER TO ms_fabric_user;
+ALTER TABLE ndc2025_package OWNER TO ms_fabric_user;
+ALTER TABLE ndc2025_product OWNER TO ms_fabric_user;
 ALTER TABLE outpatient_claims OWNER TO ms_fabric_user;
 ALTER TABLE rx_drug_events OWNER TO ms_fabric_user;
 
