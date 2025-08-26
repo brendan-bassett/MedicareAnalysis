@@ -1,50 +1,58 @@
 
+/*
 
--- SELECT rde.ndc11, COUNT(*) FROM rx_drug_events rde LEFT JOIN ndc_package n ON rde.ndc11 = n.ndc_package11 WHERE n.ndc_package11 IS NULL GROUP BY rde.ndc11;
--- SELECT COUNT(*) FROM rx_drug_events rde LEFT JOIN ndc_package n ON rde.ndc11 = n.ndc_package11 WHERE n.ndc_package11 IS NULL;
+--      Create tables so we can sort through which ndc codes from rx_drug_events can be identifies, and which cant
 
---      RESULT: 5307893 results do not match between rx_drug_events and ndc_package
+CREATE TABLE ndc_matches (
+    ndc11 VARCHAR,
+    desc_long VARCHAR
+);
 
--- SELECT rde.ndc11, COUNT(*) FROM rx_drug_events rde INNER JOIN ndc_package n ON rde.ndc11 = n.ndc_package11 GROUP BY rde.ndc11;
--- SELECT COUNT(*) FROM rx_drug_events rde INNER JOIN ndc_package n ON rde.ndc11 = n.ndc_package11;
+CREATE TABLE ndc_nomatch (
+    ndc11 VARCHAR
+);
 
---      RESULT: 244528 results match between rx_drug_events and ndc_package
 
--- SELECT LENGTH(ndc11), COUNT(LENGTH(ndc11)) FROM rx_drug_events GROUP BY LENGTH(ndc11);
+INSERT INTO ndc_matches (ndc11, desc_long)
+SELECT n.ndc11, n.desc_long FROM rx_drug_events rde INNER JOIN ndc2010 n ON rde.ndc11 = n.ndc11;
 
--- SELECT COUNT(DISTINCT ndc11) FROM rx_drug_events;
+INSERT INTO ndc_nomatch (ndc11)
+SELECT rde.ndc11 FROM ndc2010 n RIGHT JOIN rx_drug_events rde ON rde.ndc11 = n.ndc11 WHERE n.ndc11 IS NULL;
+
+
+--      Confirm that the ndc codes have been properly sorted
+
+SELECT COUNT(DISTINCT ndc11) FROM rx_drug_events;
 
 --      RESULT: 268563
 
--- SELECT COUNT(*) FROM rx_drug_events;
+SELECT COUNT(DISTINCT ndc11) FROM ndc_matches;
 
---      RESULT: 5552421
+--      RESULT: 142467
 
--- SELECT COUNT(DISTINCT ndc_package11) FROM ndc_package;
+SELECT COUNT(DISTINCT ndc11) FROM ndc_nomatch;
 
---      RESULT: 212322
+--      RESULT: 126096
 
--- SELECT COUNT(DISTINCT rde.ndc11) FROM rx_drug_events rde INNER JOIN ndc_package n ON rde.ndc11 = n.ndc_package11;
 
---      RESULT: 12543
+--      Delete all duplicate entries so the ndc11 codes listed are distinct
 
--- SELECT COUNT(DISTINCT rde.ndc11) FROM rx_drug_events rde LEFT JOIN ndc_package n ON rde.ndc11 = n.ndc_package11 WHERE n.ndc_package11 IS NULL;
+--      First we create an id so we can identify each row.
 
---      RESULT: 256020
+ALTER TABLE ndc_matches ADD COLUMN id SERIAL;
+ALTER TABLE ndc_nomatch ADD COLUMN id SERIAL;
 
-/*
-SELECT DISTINCT rde.ndc11, prod.proprietary_name
-FROM rx_drug_events rde 
-INNER JOIN ndc_package pack ON rde.ndc11 = pack.ndc_package11
-INNER JOIN ndc_product prod ON pack.product_ndc = prod.product_ndc
-LIMIT 500;
 
-SELECT DISTINCT rde.ndc11 
-FROM rx_drug_events rde 
-LEFT JOIN ndc_package n ON rde.ndc11 = n.ndc_package11 
-WHERE n.ndc_package11 IS NULL 
-LIMIT 500;
+--      Then delete the duplicates by joining the table with itself and comparing the two versions, deleting along the way.
+
+DELETE FROM ndc_matches a
+    USING ndc_matches b
+WHERE a.id < b.id
+    AND a.ndc11 = b.ndc11;
+
 */
 
-
-SELECT COUNT(*) FROM rx_drug_events rde LEFT JOIN ndc2010 n ON rde.ndc11 = n.ndc11 WHERE n.ndc11 IS NULL;
+DELETE FROM ndc_nomatch a
+    USING ndc_nomatch b
+WHERE a.id < b.id
+    AND a.ndc11 = b.ndc11;

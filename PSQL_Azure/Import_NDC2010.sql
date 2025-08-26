@@ -215,18 +215,3 @@ WHERE packsize IS NULL;
 UPDATE ndc2010
 SET desc_long = tradename || ' - ' || packsize
 WHERE strength IS NULL OR unit IS NULL;
-
-/*
---  Now that we have the NDC11 code and corresponding description, remove all the other columns
-
-ALTER TABLE ndc2010 DROP COLUMN listing_seq_no;
-ALTER TABLE ndc2010 DROP COLUMN packsize;
-ALTER TABLE ndc2010 DROP COLUMN packtype;
-ALTER TABLE ndc2010 DROP COLUMN strength;
-ALTER TABLE ndc2010 DROP COLUMN unit;
-ALTER TABLE ndc2010 DROP COLUMN rx_otc;
-ALTER TABLE ndc2010 DROP COLUMN tradename;
-ALTER TABLE ndc2010 DROP COLUMN lblcode;
-ALTER TABLE ndc2010 DROP COLUMN pkgcode;
-ALTER TABLE ndc2010 DROP COLUMN prodcode;
-*/
