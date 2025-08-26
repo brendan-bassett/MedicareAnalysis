@@ -1,58 +1,29 @@
 
-/*
+--  There are duplicates in the icd9 dataset. Lets take a look at them.
 
---      Create tables so we can sort through which ndc codes from rx_drug_events can be identifies, and which cant
+SELECT code, COUNT(*)
+FROM icd9
+GROUP BY code
+HAVING COUNT(*) > 1;
 
-CREATE TABLE ndc_matches (
-    ndc11 VARCHAR,
-    desc_long VARCHAR
-);
+SELECT * FROM icd9 WHERE code = '2449';
+SELECT * FROM icd9 WHERE code = '40390';
+SELECT * FROM icd9 WHERE code = '30002';
 
-CREATE TABLE ndc_nomatch (
-    ndc11 VARCHAR
-);
+--  These appear to be labeled as both 'included' and 'excluded. Remove all the duplicates, getting rid of 
+--  the 'excluded' ones in these cases. The 'lncluded' ones all have lower primary keys than their 
+--  'excluded' counterparts.
 
-
-INSERT INTO ndc_matches (ndc11, desc_long)
-SELECT n.ndc11, n.desc_long FROM rx_drug_events rde INNER JOIN ndc2010 n ON rde.ndc11 = n.ndc11;
-
-INSERT INTO ndc_nomatch (ndc11)
-SELECT rde.ndc11 FROM ndc2010 n RIGHT JOIN rx_drug_events rde ON rde.ndc11 = n.ndc11 WHERE n.ndc11 IS NULL;
-
-
---      Confirm that the ndc codes have been properly sorted
-
-SELECT COUNT(DISTINCT ndc11) FROM rx_drug_events;
-
---      RESULT: 268563
-
-SELECT COUNT(DISTINCT ndc11) FROM ndc_matches;
-
---      RESULT: 142467
-
-SELECT COUNT(DISTINCT ndc11) FROM ndc_nomatch;
-
---      RESULT: 126096
+DELETE FROM icd9
+WHERE primary_key IN
+    (SELECT primary_key
+    FROM 
+        (SELECT primary_key,
+         ROW_NUMBER() OVER( PARTITION BY code ORDER BY  primary_key ) AS row_num
+        FROM icd9 ) t
+        WHERE t.row_num > 1 );
 
 
---      Delete all duplicate entries so the ndc11 codes listed are distinct
-
---      First we create an id so we can identify each row.
-
-ALTER TABLE ndc_matches ADD COLUMN id SERIAL;
-ALTER TABLE ndc_nomatch ADD COLUMN id SERIAL;
-
-
---      Then delete the duplicates by joining the table with itself and comparing the two versions, deleting along the way.
-
-DELETE FROM ndc_matches a
-    USING ndc_matches b
-WHERE a.id < b.id
-    AND a.ndc11 = b.ndc11;
-
-*/
-
-DELETE FROM ndc_nomatch a
-    USING ndc_nomatch b
-WHERE a.id < b.id
-    AND a.ndc11 = b.ndc11;
+SELECT * FROM icd9 WHERE code = '2449';
+SELECT * FROM icd9 WHERE code = '40390';
+SELECT * FROM icd9 WHERE code = '30002';

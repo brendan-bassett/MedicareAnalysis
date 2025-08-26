@@ -3,8 +3,6 @@
 --  Create NDC 2010 Tables
 -- --------------------------------------------------------------------------------------------------------------------
 
-/*
-
 -- SKIP application file. This wont be needed
 
 CREATE TABLE NDC2010_doseform (
@@ -74,8 +72,6 @@ CREATE TABLE NDC2010_schedule (
 -- SKIP tbldosage file. This wont be needed
 -- SKIP tblroute file. This wont be needed
 -- SKIP tblunit file. This wont be needed
-
-*/
 
 -- --------------------------------------------------------------------------------------------------------------------
 --  merge ndc2010_packages and ndc2010_listings
@@ -215,3 +211,75 @@ WHERE packsize IS NULL;
 UPDATE ndc2010
 SET desc_long = tradename || ' - ' || packsize
 WHERE strength IS NULL OR unit IS NULL;
+
+
+-- --------------------------------------------------------------------------------------------------------------------
+--  Sort throught the NDC codes in the DeSynPUF database that can be identified, and the ones that cant
+-- --------------------------------------------------------------------------------------------------------------------
+
+--      Create tables so we can sort through which ndc codes from rx_drug_events can be identifies, and which cant
+
+CREATE TABLE ndc_matches (
+    ndc11 VARCHAR,
+    desc_long VARCHAR
+);
+
+CREATE TABLE ndc_nomatch (
+    ndc11 VARCHAR
+);
+
+INSERT INTO ndc_matches (ndc11, desc_long)
+SELECT n.ndc11, n.desc_long FROM rx_drug_events rde INNER JOIN ndc2010 n ON rde.ndc11 = n.ndc11;
+
+INSERT INTO ndc_nomatch (ndc11)
+SELECT rde.ndc11 FROM ndc2010 n RIGHT JOIN rx_drug_events rde ON rde.ndc11 = n.ndc11 WHERE n.ndc11 IS NULL;
+
+
+--      Confirm that the ndc codes have been properly sorted
+
+SELECT COUNT(DISTINCT ndc11) FROM rx_drug_events;
+
+--      RESULT: 268563
+
+SELECT COUNT(DISTINCT ndc11) FROM ndc_matches;
+
+--      RESULT: 142467
+
+SELECT COUNT(DISTINCT ndc11) FROM ndc_nomatch;
+
+--      RESULT: 126096
+
+
+--      Delete all duplicate entries so the ndc11 codes listed are distinct
+
+--      First we create an id so we can identify each row.
+
+ALTER TABLE ndc_matches ADD COLUMN id SERIAL;
+ALTER TABLE ndc_nomatch ADD COLUMN id SERIAL;
+
+--      Then delete the duplicates so each ndc11 is distinct
+
+DELETE FROM ndc_matches
+WHERE id IN
+    (SELECT id
+    FROM 
+        (SELECT id,
+         ROW_NUMBER() OVER( PARTITION BY ndc11 ORDER BY  id ) AS row_num
+        FROM ndc_matches ) t
+        WHERE t.row_num > 1 );
+
+DELETE FROM ndc_nomatch
+WHERE id IN
+    (SELECT id
+    FROM 
+        (SELECT id,
+         ROW_NUMBER() OVER( PARTITION BY ndc11 ORDER BY  id ) AS row_num
+        FROM ndc_nomatch ) t
+        WHERE t.row_num > 1 );
+
+SELECT COUNT(DISTINCT ndc11) FROM ndc_matches;
+SELECT COUNT(DISTINCT ndc11) FROM ndc_nomatch;
+
+
+ALTER TABLE ndc_matches DROP COLUMN id;
+ALTER TABLE ndc_nomatch DROP COLUMN id;
