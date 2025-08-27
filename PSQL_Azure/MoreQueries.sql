@@ -1,24 +1,5 @@
 
 -- --------------------------------------------------------------------------------------------------------------------
---  Assess how much of the icd9 table covers diagnoses in the DeSynPUF dataset
--- --------------------------------------------------------------------------------------------------------------------
-
-SELECT COUNT(DISTINCT oc.icd9_dgns_cd_1) 
-FROM outpatient_claims oc 
-LEFT JOIN icd9 i ON oc.icd9_dgns_cd_1 = i.code 
-WHERE i.code IS NULL;
-
---      RESULT: 1357
-
-SELECT COUNT(DISTINCT oc.icd9_dgns_cd_1) 
-FROM outpatient_claims oc 
-INNER JOIN icd9 i ON oc.icd9_dgns_cd_1 = i.code;
-
---      RESULT: 9776
-
---      87.8 % of the diagnoses in the outpatient claims are in the icd9 dataset 
-
--- --------------------------------------------------------------------------------------------------------------------
 --  Remove duplicates from ICD9 table
 -- --------------------------------------------------------------------------------------------------------------------
 
@@ -46,7 +27,25 @@ WHERE primary_key IN
         FROM icd9 ) t
         WHERE t.row_num > 1 );
 
-
 SELECT * FROM icd9 WHERE code = '2449';
 SELECT * FROM icd9 WHERE code = '40390';
 SELECT * FROM icd9 WHERE code = '30002';
+
+-- --------------------------------------------------------------------------------------------------------------------
+--  Assess how much of the icd9 table covers diagnoses in the DeSynPUF dataset
+-- --------------------------------------------------------------------------------------------------------------------
+
+SELECT COUNT(DISTINCT oc.icd9_dgns_cd_1) 
+FROM outpatient_claims oc 
+LEFT JOIN icd9 i ON oc.icd9_dgns_cd_1 = i.code 
+WHERE i.code IS NULL;
+
+--      RESULT: 1357
+
+SELECT COUNT(DISTINCT oc.icd9_dgns_cd_1) 
+FROM outpatient_claims oc 
+INNER JOIN icd9 i ON oc.icd9_dgns_cd_1 = i.code;
+
+--      RESULT: 9776
+
+--      87.8 % of the diagnoses in the outpatient claims are in the icd9 dataset 
