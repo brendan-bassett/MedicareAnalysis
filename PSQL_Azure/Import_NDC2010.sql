@@ -4,6 +4,7 @@
 --  Create NDC 2010 & 2012 Tables
 -- --------------------------------------------------------------------------------------------------------------------
 
+DROP TABLE IF EXISTS NDC2010_listings;
 CREATE TABLE NDC2010_listings (
 
     listing_seq_no INT,
@@ -15,6 +16,7 @@ CREATE TABLE NDC2010_listings (
     tradename VARCHAR
 );
 
+DROP TABLE IF EXISTS NDC2010_packages;
 CREATE TABLE NDC2010_packages (
 
     listing_seq_no INT,
@@ -23,6 +25,7 @@ CREATE TABLE NDC2010_packages (
     packtype VARCHAR
 );
 
+DROP TABLE IF EXISTS NDC2012_listings;
 CREATE TABLE NDC2012_listings (
 
     listing_seq_no INT,
@@ -34,6 +37,7 @@ CREATE TABLE NDC2012_listings (
     tradename VARCHAR
 );
 
+DROP TABLE IF EXISTS NDC2012_packages;
 CREATE TABLE NDC2012_packages (
 
     listing_seq_no INT,
@@ -42,10 +46,12 @@ CREATE TABLE NDC2012_packages (
     packtype VARCHAR
 );
 
+
 -- --------------------------------------------------------------------------------------------------------------------
 --  merge ndc2010_packages and ndc2010_listings
 -- --------------------------------------------------------------------------------------------------------------------
 
+DROP TABLE IF EXISTS ndc2010;
 CREATE TABLE ndc2010 AS TABLE ndc2010_packages;
 
 ALTER TABLE ndc2010 
@@ -85,6 +91,7 @@ SELECT COUNT(*) FROM ndc2010 WHERE prodcode IS NULL;
 --  merge ndc2012_packages and ndc2012_listings
 -- --------------------------------------------------------------------------------------------------------------------
 
+DROP TABLE IF EXISTS ndc2012;
 CREATE TABLE ndc2012 AS TABLE ndc2012_packages;
 
 ALTER TABLE ndc2012 
@@ -116,8 +123,9 @@ SET lblcode = l.lblcode,
 FROM NDC2012_listings l
 WHERE c.listing_seq_no = l.listing_seq_no;
 
+
 -- --------------------------------------------------------------------------------------------------------------------
---  Assemble the complete NDC11 code & descriptions
+--  Assemble the complete NDC11 code & descriptions for 2010 and 2012
 -- --------------------------------------------------------------------------------------------------------------------
 
 --  Remove the leading zero in NDC label code so the result is a 5-digit code
@@ -289,11 +297,13 @@ WHERE strength IS NULL OR unit IS NULL;
 
 --      Create tables so we can sort through which ndc codes from rx_drug_events can be identifies, and which cant
 
+DROP TABLE IF EXISTS ndc_matches;
 CREATE TABLE ndc_matches (
     ndc11 VARCHAR,
     desc_long VARCHAR
 );
 
+DROP TABLE IF EXISTS ndc_nomatch;
 CREATE TABLE ndc_nomatch (
     ndc11 VARCHAR
 );
@@ -304,11 +314,6 @@ SELECT n.ndc11, n.desc_long FROM rx_drug_events rde INNER JOIN ndc2010 n ON rde.
 INSERT INTO ndc_nomatch (ndc11)
 SELECT rde.ndc11 FROM ndc2010 n RIGHT JOIN rx_drug_events rde ON rde.ndc11 = n.ndc11 WHERE n.ndc11 IS NULL;
 
-INSERT INTO ndc_matches (ndc11, desc_long)
-SELECT n.ndc11, n.desc_long FROM rx_drug_events rde INNER JOIN ndc2012 n ON rde.ndc11 = n.ndc11;
-
-INSERT INTO ndc_nomatch (ndc11)
-SELECT rde.ndc11 FROM ndc2012 n RIGHT JOIN rx_drug_events rde ON rde.ndc11 = n.ndc11 WHERE n.ndc11 IS NULL;
 
 --      Delete all duplicate entries so the ndc11 codes listed are distinct
 
@@ -333,15 +338,57 @@ WHERE id IN
         FROM ndc_nomatch ) t
         WHERE t.row_num > 1 );
 
+ALTER TABLE ndc_matches DROP COLUMN id;
+ALTER TABLE ndc_nomatch DROP COLUMN id;
+
 SELECT COUNT(DISTINCT ndc11) FROM ndc_matches;
 SELECT COUNT(DISTINCT ndc11) FROM ndc_nomatch;
 
 
+--  Sort through the NDC20112 matches
+-- --------------------------------------------------------------------------------------------------------------------
+
+INSERT INTO ndc_matches (ndc11, desc_long)
+SELECT n.ndc11, n.desc_long FROM rx_drug_events rde INNER JOIN ndc2012 n ON rde.ndc11 = n.ndc11;
+
+INSERT INTO ndc_nomatch (ndc11)
+SELECT rde.ndc11 FROM ndc2012 n RIGHT JOIN rx_drug_events rde ON rde.ndc11 = n.ndc11 WHERE n.ndc11 IS NULL;
+
+
+ALTER TABLE ndc_matches ADD COLUMN id SERIAL;
+ALTER TABLE ndc_nomatch ADD COLUMN id SERIAL;
+
+DELETE FROM ndc_matches
+WHERE id IN
+    (SELECT id
+    FROM 
+        (SELECT id,
+         ROW_NUMBER() OVER( PARTITION BY ndc11 ORDER BY  id ) AS row_num
+        FROM ndc_matches ) t
+        WHERE t.row_num > 1 );
+
+DELETE FROM ndc_nomatch
+WHERE id IN
+    (SELECT id
+    FROM 
+        (SELECT id,
+         ROW_NUMBER() OVER( PARTITION BY ndc11 ORDER BY  id ) AS row_num
+        FROM ndc_nomatch ) t
+        WHERE t.row_num > 1 );
+
 ALTER TABLE ndc_matches DROP COLUMN id;
 ALTER TABLE ndc_nomatch DROP COLUMN id;
 
+SELECT COUNT(DISTINCT ndc11) FROM ndc_matches;
+
+--      RESULT: 154408
+
+SELECT COUNT(DISTINCT ndc11) FROM ndc_nomatch;
+
+--      RESULT: 138052
 
 --  Reconcile the remaining ndc codes that have not matched, using the 2025 dataset.
+-- --------------------------------------------------------------------------------------------------------------------
 
 INSERT INTO ndc_matches
 SELECT nm.ndc11, n.package_description
@@ -355,8 +402,16 @@ WHERE nm.ndc11 = m.ndc11;
 
 SELECT COUNT(*) FROM ndc_matches;
 
---  RESULT: 144490
+--  RESULT: 156624
 
 SELECT COUNT(*) FROM ndc_nomatch;
 
---  RESULT: 124073
+--  RESULT: 112728
+
+--  **FINAL RESULT**    58 % match from rx_drug_events to 2010, 2012, and 2025 NDC descriptions
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Run cleanup of dead tuples & maximize efficiency
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+VACUUM FULL ANALYZE;
