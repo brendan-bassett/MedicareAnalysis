@@ -513,14 +513,55 @@ CREATE TABLE rx_drug_events (
 	
 
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
--- 	Create NDC Descriptions Tables
+-- 	Create NDC 2018 & 2025 Tables
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE TABLE ndc2018_package (
+	
+	product_id VARCHAR, 
+	product_ndc VARCHAR, 
+	ndc10 VARCHAR,
+	package_description VARCHAR, 
+	start_marketing_date_str VARCHAR, 
+	start_marketing_date DATE, 
+	end_marketing_date_str VARCHAR,
+	end_marketing_date DATE,
+	ndc_exclude_flag CHAR(1), 
+	sample_package CHAR(1)
+);
+
+CREATE TABLE ndc2018_product (
+	
+	product_id VARCHAR, 
+	product_ndc VARCHAR, 
+	product_type_name VARCHAR, 
+	proprietary_name VARCHAR, 
+	proprietary_name_suffix VARCHAR, 
+	non_proprietary_name VARCHAR, 
+	dosage_form_name VARCHAR, 
+	route_name VARCHAR, 
+	start_marketing_date_str VARCHAR, 
+	start_marketing_date DATE, 
+	end_marketing_date_str VARCHAR, 
+	end_marketing_date DATE, 
+	marketing_category_name VARCHAR, 
+	application_number VARCHAR, 
+	labeler_name VARCHAR, 
+	substance_name VARCHAR, 
+	active_numerator_strength VARCHAR, 
+	active_ingred_unit VARCHAR, 
+	pharm_classes VARCHAR, 
+	dea_schedule VARCHAR, 
+	ndc_exclude_flag CHAR, 
+	listing_record_certified_through_str VARCHAR,
+	listing_record_certified_through DATE
+);
 
 CREATE TABLE ndc2025_package (
 	
 	product_id VARCHAR(47), 
 	product_ndc VARCHAR(10), 
-	ndc2025_package_code VARCHAR(12),
+	ndc10 VARCHAR(12),
 	package_description VARCHAR(2429), 
 	start_marketing_date DATE, 
 	end_marketing_date DATE,
@@ -531,7 +572,7 @@ CREATE TABLE ndc2025_package (
 CREATE TABLE ndc2025_product (
 	
 	product_id VARCHAR(47), 
-	product_ndc VARCHAR(10), 
+	product_ndc VARCHAR, 
 	product_type_name VARCHAR(27), 
 	proprietary_name VARCHAR(257), 
 	proprietary_name_suffix VARCHAR(125), 
@@ -551,6 +592,53 @@ CREATE TABLE ndc2025_product (
 	ndc_exclude_flag CHAR(1), 
 	listing_record_certified_through DATE
 );
+
+-- --------------------------------------------------------------------------------------------------------------------
+--  Create NDC 2010 & 2012 Tables
+-- --------------------------------------------------------------------------------------------------------------------
+
+DROP TABLE IF EXISTS NDC2010_listings;
+CREATE TABLE NDC2010_listings (
+
+    listing_seq_no INT,
+    lblcode VARCHAR,
+    prodcode VARCHAR,
+    strength VARCHAR,
+    unit VARCHAR,
+    rx_otc VARCHAR,
+    tradename VARCHAR
+);
+
+DROP TABLE IF EXISTS NDC2010_packages;
+CREATE TABLE NDC2010_packages (
+
+    listing_seq_no INT,
+    pkgcode VARCHAR,
+    packsize VARCHAR,
+    packtype VARCHAR
+);
+
+DROP TABLE IF EXISTS NDC2012_listings;
+CREATE TABLE NDC2012_listings (
+
+    listing_seq_no INT,
+    lblcode VARCHAR,
+    prodcode VARCHAR,
+    strength VARCHAR,
+    unit VARCHAR,
+    rx_otc VARCHAR,
+    tradename VARCHAR
+);
+
+DROP TABLE IF EXISTS NDC2012_packages;
+CREATE TABLE NDC2012_packages (
+
+    listing_seq_no INT,
+    pkgcode VARCHAR,
+    packsize VARCHAR,
+    packtype VARCHAR
+);
+
 
 
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -239,24 +239,20 @@ SELECT * FROM convert_to_boolean ('beneficiary_summary_2010', 'sp_strketia', 1, 
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-ALTER TABLE ndc2025_package
-RENAME COLUMN ndc2025_package_code TO ndc2025_package10;
-
-
 -- divide the NDC-10 package code into the 3 segments
 
 ALTER TABLE ndc2025_package
 ADD seg_1 VARCHAR(5);
 
 UPDATE ndc2025_package
-SET seg_1 = SUBSTRING( ndc2025_package10 FROM '^[0-9]*') ;
+SET seg_1 = SUBSTRING( ndc10 FROM '^[0-9]*') ;
 
 
 ALTER TABLE ndc2025_package
 ADD seg_2 VARCHAR(4);
 
 UPDATE ndc2025_package
-SET seg_2 = TRIM(BOTH '-' FROM SUBSTRING( ndc2025_package10 FROM '-[0-9]*-'));
+SET seg_2 = TRIM(BOTH '-' FROM SUBSTRING( ndc10 FROM '-[0-9]*-'));
 
 
 ALTER TABLE ndc2025_package
@@ -270,18 +266,18 @@ SET seg_3 = SUBSTRING( ndc2025_package10 FROM '[0-9]*$');
 -- combine the 3 segments into NDC-11
 
 ALTER TABLE ndc2025_package
-ADD ndc2025_package11 VARCHAR(13);
+ADD COLUMN ndc11 VARCHAR(13);
 
 UPDATE ndc2025_package
-SET ndc2025_package11 = '0' || seg_1 || seg_2 || seg_3
+SET ndc11 = '0' || seg_1 || seg_2 || seg_3
 WHERE LENGTH(seg_1) = 4;
 
 UPDATE ndc2025_package
-SET ndc2025_package11 = seg_1 || '0' || seg_2 || seg_3
+SET ndc11 = seg_1 || '0' || seg_2 || seg_3
 WHERE LENGTH(seg_2) = 3;
 
 UPDATE ndc2025_package
-SET ndc2025_package11 = seg_1 || seg_2 || '0' || seg_3
+SET ndc11 = seg_1 || seg_2 || '0' || seg_3
 WHERE LENGTH(seg_3) = 1;
 
 
