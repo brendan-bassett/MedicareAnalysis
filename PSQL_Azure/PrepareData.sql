@@ -348,20 +348,20 @@ SELECT COUNT(*) FROM outpatient_claims oc RIGHT JOIN cms_rvu_2010 c ON oc.hcpcs_
 
 --      Populate a new hcpcs table with the descriptions from hcpcs17
 
-CREATE TABLE hcpcs_desc (
+CREATE TABLE hcpcs (
     hcpcs VARCHAR(5) UNIQUE,
     desc_short VARCHAR,
     desc_long VARCHAR
 );
 
-INSERT INTO hcpcs_desc (hcpcs, desc_short, desc_long)
+INSERT INTO hcpcs (hcpcs, desc_short, desc_long)
 SELECT h.hcpc, h.desc_short, h.desc_long
 FROM hcpcs17 h;
 
 
 --      Add any additional hcpcs codes and descriptions from cms_rvu that are not already in the description list
 
-INSERT INTO hcpcs_desc (hcpcs, desc_short, desc_long)
+INSERT INTO hcpcs (hcpcs, desc_short, desc_long)
 SELECT cr.hcpcs, cr.description, cr.description
 FROM cms_rvu_2010 cr
 ON CONFLICT (hcpcs)

@@ -1,5 +1,4 @@
 
-/*
 
 -- --------------------------------------------------------------------------------------------------------------------
 --  Merge 2008 & 2010 & 2012 packages & listings
@@ -156,24 +155,8 @@ UPDATE ndc2008
 SET lblcode_trimmed = SUBSTRING(lblcode, 2);
 
 
---  Many package codes have '*' characters. It is unclear what the significance of these are.
-
---  There are quite a few rows where the package code is '**'. These produce a lot of double-entries for NDC11 codes 
---  later on, so we should delete them.
-
-SELECT COUNT(*) FROM ndc2008 WHERE pkgcode = '**';
-
---      RESULT: 787         number of product & package codes to be deleted
-
-DELETE FROM ndc2008
-WHERE pkgcode = '**';
-
-SELECT COUNT(*) FROM ndc2008;
-
---      RESULT: 147977          Remaining number of package & product combinations before we clean  up the rest
-
-
---  Assumed the rest with only one '*' can be replaced with zeros for the NDC11
+--  Many package codes have '*' characters that seem to represent zeros in the NDC11 codes. 
+--     See "OtherQueries.sql" for a deeper look at this.
 
 ALTER TABLE ndc2008 ADD COLUMN prodcode_converted VARCHAR;
 
@@ -258,25 +241,8 @@ UPDATE ndc2010
 SET lblcode_trimmed = SUBSTRING(lblcode, 2);
 
 
---  Many package codes have '*' characters. It is unclear what the significance of these are.
-
---  There are quite a few rows where the package code is '**'. These produce a lot of double-entries for NDC11 codes 
---  later on, so we should delete them.
-
-SELECT COUNT(*) FROM ndc2010 WHERE pkgcode = '**';
-
---      RESULT: 807
-
-DELETE FROM ndc2010
-WHERE pkgcode = '**';
-
-
-SELECT COUNT(*) FROM ndc2010;
-
---      RESULT: 171452          Remaining number of package & product combinations before we clean  up the rest
-
-
---  Assumed the rest with only one '*' can be replaced with zeros for the NDC11
+--  Many package codes have '*' characters that seem to represent zeros in the NDC11 codes. 
+--     See "OtherQueries.sql" for a deeper look at this.
 
 ALTER TABLE ndc2010 ADD COLUMN prodcode_converted VARCHAR;
 
@@ -361,26 +327,9 @@ UPDATE ndc2012
 SET lblcode_trimmed = SUBSTRING(lblcode, 2);
 
 
---  Many package codes have '*' characters. It is unclear what the significance of these are.
+--  Many package codes have '*' characters that seem to represent zeros in the NDC11 codes. 
+--     See "OtherQueries.sql" for a deeper look at this.
 
---  There are quite a few rows where the package code is '**'. These produce a lot of double-entries for NDC11 codes 
---  later on, so we should delete them.
-
-SELECT COUNT(*) FROM ndc2012 WHERE pkgcode = '**';
-
---      RESULT: 638
-
-
-DELETE FROM ndc2012
-WHERE pkgcode = '**';
-
-
-SELECT COUNT(*) FROM ndc2012;
-
---      RESULT: 182826          Remaining number of package & product combinations before we clean  up the rest
-
-
---  Assumed the rest with only one '*' can be replaced with zeros for the NDC11
 
 ALTER TABLE ndc2012 ADD COLUMN prodcode_converted VARCHAR;
 
@@ -505,7 +454,6 @@ DROP COLUMN seg_2;
 ALTER TABLE ndc2018_package
 DROP COLUMN seg_3;
 
-*/
 
 --  2025 Dataset
 -- --------------------------------------------------------------------------------------------------------------------
@@ -605,7 +553,6 @@ SET desc_long = b.proprietary_name || ' - ' || desc_long
 FROM ndc2025_product b
 WHERE a.ndc8_prod = b.product_ndc;
 
-/*
 
 -- --------------------------------------------------------------------------------------------------------------------
 --  Combine all the NDC code & description tables into one combined table
@@ -664,22 +611,17 @@ SELECT matched, COUNT(*)
 
 /*
       RESULTS:
-            False	109872
-            True	158691
+            False	105478
+            True	163085
 
-            False	105826
-            True	162737
-
-    60.6 % of the NDC codes referred to in the desynpuf dataset have matching descriptions
+    60.7 % of the NDC codes referred to in the desynpuf dataset have matching descriptions
 */
 
-*/
 
 -- --------------------------------------------------------------------------------------------------------------------
 --  Clean up the extra data
 -- --------------------------------------------------------------------------------------------------------------------
 
-/*
 
 DROP TABLE IF EXISTS ndc2008_listings;
 DROP TABLE IF EXISTS ndc2010_listings;
@@ -697,5 +639,3 @@ DROP TABLE IF EXISTS ndc2025_product;
 
 
 VACUUM FULL ANALYZE;
-
-*/

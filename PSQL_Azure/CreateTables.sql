@@ -527,7 +527,7 @@ CREATE TABLE ndc2018_package (
 	start_marketing_date DATE, 
 	end_marketing_date_str VARCHAR,
 	end_marketing_date DATE,
-	ndc_exclude_flag CHAR(1), 
+	exclude_flag CHAR(1), 
 	sample_package CHAR(1)
 );
 
@@ -554,7 +554,7 @@ CREATE TABLE ndc2018_product (
 	active_ingred_unit VARCHAR, 
 	pharm_classes VARCHAR, 
 	dea_schedule VARCHAR, 
-	ndc_exclude_flag CHAR, 
+	exclude_flag CHAR, 
 	listing_record_certified_through_str VARCHAR,
 	listing_record_certified_through DATE
 );
@@ -572,8 +572,8 @@ CREATE TABLE ndc2025_package (
 	sample_package CHAR(1)
 );
 
-DROP TABLE IF EXISTS ndc2025_package;
-CREATE TABLE ndc2025_package (
+DROP TABLE IF EXISTS ndc2025_product;
+CREATE TABLE ndc2025_product (
 	
 	product_id VARCHAR, 
 	product_ndc VARCHAR, 
