@@ -235,65 +235,6 @@ SELECT * FROM convert_to_boolean ('beneficiary_summary_2010', 'sp_strketia', 1, 
 
 
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
--- 	Convert NDC-10 to NDC-11
--- ---------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
--- divide the NDC-10 package code into the 3 segments
-
-ALTER TABLE ndc2025_package
-ADD seg_1 VARCHAR(5);
-
-UPDATE ndc2025_package
-SET seg_1 = SUBSTRING( ndc10 FROM '^[0-9]*') ;
-
-
-ALTER TABLE ndc2025_package
-ADD seg_2 VARCHAR(4);
-
-UPDATE ndc2025_package
-SET seg_2 = TRIM(BOTH '-' FROM SUBSTRING( ndc10 FROM '-[0-9]*-'));
-
-
-ALTER TABLE ndc2025_package
-ADD seg_3 VARCHAR(2);
-
-UPDATE ndc2025_package
-SET seg_3 = SUBSTRING( ndc2025_package10 FROM '[0-9]*$');
-
-
-
--- combine the 3 segments into NDC-11
-
-ALTER TABLE ndc2025_package
-ADD COLUMN ndc11 VARCHAR(13);
-
-UPDATE ndc2025_package
-SET ndc11 = '0' || seg_1 || seg_2 || seg_3
-WHERE LENGTH(seg_1) = 4;
-
-UPDATE ndc2025_package
-SET ndc11 = seg_1 || '0' || seg_2 || seg_3
-WHERE LENGTH(seg_2) = 3;
-
-UPDATE ndc2025_package
-SET ndc11 = seg_1 || seg_2 || '0' || seg_3
-WHERE LENGTH(seg_3) = 1;
-
-
--- drop all single segment columns that were created for conversion
-
-ALTER TABLE ndc2025_package
-DROP COLUMN seg_1;
-
-ALTER TABLE ndc2025_package
-DROP COLUMN seg_2;
-
-ALTER TABLE ndc2025_package
-DROP COLUMN seg_3;
-
-
--- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Merge the ICD9 included & excluded tables
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -344,8 +285,6 @@ ALTER TABLE cms_rvu_2010 ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE carrier_claims ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE icd9 ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE inpatient_claims ADD COLUMN primary_key SERIAL PRIMARY KEY;
-ALTER TABLE ndc2025_package ADD COLUMN primary_key SERIAL PRIMARY KEY;
-ALTER TABLE ndc2025_product ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE outpatient_claims ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE state_codes ADD COLUMN primary_key SERIAL PRIMARY KEY;
 ALTER TABLE county_codes ADD COLUMN primary_key SERIAL PRIMARY KEY;
@@ -610,6 +549,39 @@ FROM beneficiary_summary_2010;
 UPDATE beneficiary_summary_merged
 SET bs_year = 2010
 WHERE bs_year IS NULL;
+
+
+-- --------------------------------------------------------------------------------------------------------------------
+--  Remove duplicates from ICD9 table
+-- --------------------------------------------------------------------------------------------------------------------
+
+--  There are duplicates in the icd9 dataset. Lets take a look at them.
+
+SELECT code, COUNT(*)
+FROM icd9
+GROUP BY code
+HAVING COUNT(*) > 1;
+
+SELECT * FROM icd9 WHERE code = '2449';
+SELECT * FROM icd9 WHERE code = '40390';
+SELECT * FROM icd9 WHERE code = '30002';
+
+--  These appear to be labeled as both 'included' and 'excluded. Remove all the duplicates, getting rid of 
+--  the 'excluded' ones in these cases. The 'lncluded' ones all have lower primary keys than their 
+--  'excluded' counterparts.
+
+DELETE FROM icd9
+WHERE primary_key IN
+    (SELECT primary_key
+    FROM 
+        (SELECT primary_key,
+         ROW_NUMBER() OVER( PARTITION BY code ORDER BY  primary_key ) AS row_num
+        FROM icd9 ) t
+        WHERE t.row_num > 1 );
+
+SELECT * FROM icd9 WHERE code = '2449';
+SELECT * FROM icd9 WHERE code = '40390';
+SELECT * FROM icd9 WHERE code = '30002';
 
 
 -- Get rid of the old de_syn_puf id and the old beneficiary summary tables

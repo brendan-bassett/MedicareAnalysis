@@ -516,6 +516,7 @@ CREATE TABLE rx_drug_events (
 -- 	Create NDC 2018 & 2025 Tables
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
+DROP TABLE IF EXISTS ndc2018_package;
 CREATE TABLE ndc2018_package (
 	
 	product_id VARCHAR, 
@@ -530,6 +531,7 @@ CREATE TABLE ndc2018_package (
 	sample_package CHAR(1)
 );
 
+DROP TABLE IF EXISTS ndc2018_product;
 CREATE TABLE ndc2018_product (
 	
 	product_id VARCHAR, 
@@ -557,25 +559,27 @@ CREATE TABLE ndc2018_product (
 	listing_record_certified_through DATE
 );
 
+DROP TABLE IF EXISTS ndc2025_package;
 CREATE TABLE ndc2025_package (
 	
-	product_id VARCHAR(47), 
-	product_ndc VARCHAR(10), 
-	ndc10 VARCHAR(12),
-	package_description VARCHAR(2429), 
+	product_id VARCHAR, 
+	product_ndc VARCHAR, 
+	ndc10 VARCHAR,
+	package_description VARCHAR, 
 	start_marketing_date DATE, 
 	end_marketing_date DATE,
 	ndc_exclude_flag CHAR(1), 
 	sample_package CHAR(1)
 );
 
-CREATE TABLE ndc2025_product (
+DROP TABLE IF EXISTS ndc2025_package;
+CREATE TABLE ndc2025_package (
 	
-	product_id VARCHAR(47), 
+	product_id VARCHAR, 
 	product_ndc VARCHAR, 
-	product_type_name VARCHAR(27), 
-	proprietary_name VARCHAR(257), 
-	proprietary_name_suffix VARCHAR(125), 
+	product_type_name VARCHAR, 
+	proprietary_name VARCHAR, 
+	proprietary_name_suffix VARCHAR, 
 	non_proprietary_name VARCHAR(512), 
 	dosage_form_name VARCHAR(46), 
 	route_name VARCHAR(122), 
@@ -588,14 +592,35 @@ CREATE TABLE ndc2025_product (
 	active_numerator_strength VARCHAR(399), 
 	active_ingred_unit VARCHAR(1120), 
 	pharm_classes VARCHAR(3997), 
-	dea_schedule VARCHAR(4), 
+	dea_schedule VARCHAR, 
 	ndc_exclude_flag CHAR(1), 
 	listing_record_certified_through DATE
 );
 
 -- --------------------------------------------------------------------------------------------------------------------
---  Create NDC 2010 & 2012 Tables
+--  Create NDC 2008 & 2010 & 2012 Tables
 -- --------------------------------------------------------------------------------------------------------------------
+
+DROP TABLE IF EXISTS NDC2008_listings;
+CREATE TABLE NDC2008_listings (
+
+    listing_seq_no INT,
+    lblcode VARCHAR,
+    prodcode VARCHAR,
+    strength VARCHAR,
+    unit VARCHAR,
+    rx_otc VARCHAR,
+    tradename VARCHAR
+);
+
+DROP TABLE IF EXISTS NDC2008_packages;
+CREATE TABLE NDC2008_packages (
+
+    listing_seq_no INT,
+    pkgcode VARCHAR,
+    packsize VARCHAR,
+    packtype VARCHAR
+);
 
 DROP TABLE IF EXISTS NDC2010_listings;
 CREATE TABLE NDC2010_listings (
@@ -638,7 +663,6 @@ CREATE TABLE NDC2012_packages (
     packsize VARCHAR,
     packtype VARCHAR
 );
-
 
 
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
