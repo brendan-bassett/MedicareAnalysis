@@ -11,31 +11,49 @@
 
 CREATE TABLE icd9 (
 	
-	code VARCHAR(5), 
-	description VARCHAR(222),
+	code VARCHAR UNIQUE, 
+	description VARCHAR,
 	included BOOLEAN
 );
 
-ALTER TABLE icd9_included
-ADD COLUMN included BOOL;
-
-ALTER TABLE icd9_excluded
-ADD COLUMN included BOOL;
-
-UPDATE icd9_included
-SET included = TRUE;
-
-UPDATE icd9_excluded
-SET included = FALSE;
+INSERT INTO icd9
+SELECT code, description, True 
+FROM icd9_included
+ON CONFLICT DO NOTHING;
 
 INSERT INTO icd9
-SELECT * FROM icd9_included;
+SELECT code, description, False 
+FROM icd9_excluded
+ON CONFLICT DO NOTHING;
 
-INSERT INTO icd9
-SELECT * FROM icd9_excluded;
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Merge hcpcs17 and cms_rvu descriptions.
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
-DROP TABLE icd9_included;
-DROP TABLE icd9_excluded;
+--  The hcpcs17 dataset has better descriptions, but less codes. The CMS_RVU dataset has more codes, but poorer descriptions. 
+--      (see Other_Queries.sql for the comparison)
+--  Merge the two datasets into one hcpcs file for the Medicare-Analysis dataset
+
+--      Populate a new hcpcs table with the descriptions from hcpcs17
+
+CREATE TABLE hcpcs (
+    hcpcs VARCHAR(5) UNIQUE,
+    desc_short VARCHAR,
+    desc_long VARCHAR
+);
+
+INSERT INTO hcpcs (hcpcs, desc_short, desc_long)
+SELECT h.hcpc, h.desc_short, h.desc_long
+FROM hcpcs17 h
+ON CONFLICT DO NOTHING;
+
+--      Add any additional hcpcs codes and descriptions from cms_rvu that are not already in the description list
+
+INSERT INTO hcpcs (hcpcs, desc_short, desc_long)
+SELECT cr.hcpcs, cr.description, cr.description
+FROM cms_rvu_2010 cr
+ON CONFLICT DO NOTHING;
+
 
 -- --------------------------------------------------------------------------------------------------------------------
 --  Merge 2008 & 2010 & 2012 packages & listings
@@ -601,6 +619,7 @@ CREATE TABLE ndc_combined (
     desc_long VARCHAR
 );
 
+
 INSERT INTO ndc_combined 
 SELECT ndc11, desc_long
     FROM ndc2008
@@ -630,30 +649,6 @@ ON CONFLICT DO NOTHING;
 SELECT COUNT(*) FROM ndc_combined;
 
 --      RESULT: 596106      unique NDCs with descriptions 
-
--- --------------------------------------------------------------------------------------------------------------------
---  Sort throught the NDC codes in the DeSynPUF database that can be identified, and the ones that cant
--- --------------------------------------------------------------------------------------------------------------------
-
-UPDATE ndc_desynpuf a
-SET matched = TRUE,
-    desc_long = c.desc_long
-FROM ndc_combined c
-WHERE a.ndc11 = c.ndc11;
-
-
-SELECT matched, COUNT(*) 
-    FROM ndc_desynpuf 
-    GROUP BY matched;
-
-/*
-      RESULTS:
-            False	105478
-            True	163085
-
-    60.7 % of the NDC codes referred to in the desynpuf dataset have matching descriptions
-*/
-
 
 -- --------------------------------------------------------------------------------------------------------------------
 --  Clean up the extra data

@@ -4,6 +4,52 @@
 -----------------------------------------------------------------------------------------------------------------------
 */
 
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Merge hcpcs17 and cms_rvu descriptions.
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--      List and count every hcpcs code listed in desynpuf_outpatientclaims that does not correspond to an etry in the hcpcs17 table
+
+SELECT oc.hcpcs_cd_1, COUNT(*) FROM ma_outpatientclaims oc LEFT JOIN hcpcs17 h ON oc.hcpcs_cd_1 = h.hcpc WHERE h.hcpc IS NULL GROUP BY oc.hcpcs_cd_1;
+
+--      That's a lot of entries that do not occur in hcpcs 17
+
+--      Show all the hcpcs codes from hcpcs17 table that DO NOT appear in the cms_rvu table
+
+SELECT h.hcpc, h.desc_long FROM hcpcs17 h LEFT JOIN cms_rvu_2010 c ON h.hcpc = c.hcpcs WHERE c.hcpcs IS NULL GROUP BY h.hcpc, h.desc_long;
+
+--      Count how many entries in the hcpcs17 table DO NOT appear in the cms_rvu
+
+SELECT COUNT(*) FROM hcpcs17 h LEFT JOIN cms_rvu_2010 c ON h.hcpc = c.hcpcs WHERE c.hcpcs IS NULL;
+
+--      RESULT: 3767
+
+--      Show all the hcpcs codes from hcpcs17 table that do appear in the cms_rvu table
+
+SELECT h.hcpc, h.desc_long FROM hcpcs17 h INNER JOIN cms_rvu_2010 c ON h.hcpc = c.hcpcs GROUP BY h.hcpc, h.desc_long;
+
+--      Count how many entries in the hcpcs17 table do appear in the cms_rvu
+
+SELECT COUNT(*) FROM hcpcs17 h INNER JOIN cms_rvu_2010 c ON h.hcpc = c.hcpcs;
+
+--      RESULT: 2775
+
+--      There is a lot of overlap between the hcpcs17 list of hcpcs codes, but it doesnt cover all the codes present 
+--      in the Medicare DeSynPUF dataset.
+
+--      Show and count each hcpcs code from outpatient claims that does not appear in cms_rvu
+
+SELECT c.hcpcs, c.description, COUNT(*) FROM ma_outpatientclaims oc RIGHT JOIN cms_rvu_2010 c ON oc.hcpcs_cd_1 = c.hcpcs WHERE c.hcpcs IS NULL GROUP BY c.hcpcs, c.description;
+
+--      RESULT: -- no rows --
+
+--      The cms_rvu table has hcpcs descriptions for every code in the Medicare DeSynPUF dataset
+
+--      Just to double-check. Let's count the number of hcpcs codes in the outpatient claims that do not appear in the cms_rvu
+
+SELECT COUNT(*) FROM ma_outpatientclaims oc RIGHT JOIN cms_rvu_2010 c ON oc.hcpcs_cd_1 = c.hcpcs WHERE c.hcpcs IS NULL;
+
+--      RESULT: 0
 
 -- --------------------------------------------------------------------------------------------------------------------
 --  Assess how much of the icd9 table covers diagnoses in the DeSynPUF dataset

@@ -663,15 +663,15 @@ CREATE TABLE NDC2012_packages (
 
 CREATE TABLE icd9_included (
 	
-	code VARCHAR(5), 
-	description VARCHAR(222)
+	code VARCHAR, 
+	description VARCHAR
 );
 
 
 CREATE TABLE icd9_excluded (
 	
-	code VARCHAR(5), 
-	description VARCHAR(222)
+	code VARCHAR, 
+	description VARCHAR
 );
 
 

@@ -17,6 +17,7 @@ Specific versions for the CPT, ICD-9, and NDC codes are not specified. The Medic
 **Medicare Claims Synthetic Public Use Files (SynPUFs)** - https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files
 **CMS Relative Value Files** - https://www.cms.gov/medicare/payment/fee-schedules/physician/pfs-relative-value-files
 **Alpha-Numeric HCPS File Content** - http://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets/Alpha-Numeric-HCPCS.html
-**National Drug Code (NDC) Directory** - https://www.fda.gov/drugs/drug-approvals-and-databases/national-drug-code-directory
+**CURRENT National Drug Code (NDC) Directory** - https://www.fda.gov/drugs/drug-approvals-and-databases/national-drug-code-directory
+**PAST National Drug Code (NDC) Data** - https://www.nber.org/research/data/national-drug-code
 **ICD-9 Code Lists** - https://www.cms.gov/medicare/coordination-benefits-recovery/overview/icd-code-lists
 **SSA County Codes** - https://www.cms.gov/data-research/statistics-trends-and-reports/health-plans-reports-files-data/state-county
