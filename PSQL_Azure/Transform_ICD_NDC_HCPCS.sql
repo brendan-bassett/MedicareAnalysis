@@ -1,4 +1,41 @@
+/*
+-----------------------------------------------------------------------------------------------------------------------
+	Transform the imported NDC, HCPCS, ICD, and other tables so they are more usable
+-----------------------------------------------------------------------------------------------------------------------
+*/
 
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Merge the ICD9 included & excluded tables
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE TABLE icd9 (
+	
+	code VARCHAR(5), 
+	description VARCHAR(222),
+	included BOOLEAN
+);
+
+ALTER TABLE icd9_included
+ADD COLUMN included BOOL;
+
+ALTER TABLE icd9_excluded
+ADD COLUMN included BOOL;
+
+UPDATE icd9_included
+SET included = TRUE;
+
+UPDATE icd9_excluded
+SET included = FALSE;
+
+INSERT INTO icd9
+SELECT * FROM icd9_included;
+
+INSERT INTO icd9
+SELECT * FROM icd9_excluded;
+
+DROP TABLE icd9_included;
+DROP TABLE icd9_excluded;
 
 -- --------------------------------------------------------------------------------------------------------------------
 --  Merge 2008 & 2010 & 2012 packages & listings
