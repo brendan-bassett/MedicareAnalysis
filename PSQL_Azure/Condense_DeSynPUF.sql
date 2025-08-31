@@ -15,6 +15,8 @@
 --  Save the original desynpuf tables and create new Medical-Analysis (MA) tables
 -- --------------------------------------------------------------------------------------------------------------------
 
+/*
+
 ALTER TABLE beneficiary_summary_2008 RENAME TO desynpuf_beneficiarysummary2008;
 ALTER TABLE beneficiary_summary_2009 RENAME TO desynpuf_beneficiarysummary2009;
 ALTER TABLE beneficiary_summary_2010 RENAME TO desynpuf_beneficiarysummary2010;
@@ -22,6 +24,18 @@ ALTER TABLE carrier_claims RENAME TO desynpuf_carrierclaims;
 ALTER TABLE inpatient_claims RENAME TO desynpuf_inpatientclaims;
 ALTER TABLE outpatient_claims RENAME TO desynpuf_outpatientclaims;
 ALTER TABLE rx_drug_events RENAME TO desynpuf_rxdrugevents;
+
+*/
+
+/*
+
+DROP TABLE IF EXISTS ma_beneficiarysummary2008;
+DROP TABLE IF EXISTS ma_beneficiarysummary2009;
+DROP TABLE IF EXISTS ma_beneficiarysummary2010;
+DROP TABLE IF EXISTS ma_carrierclaims;
+DROP TABLE IF EXISTS ma_inpatientclaims;
+DROP TABLE IF EXISTS ma_outpatientclaims;
+DROP TABLE IF EXISTS ma_rxdrugevents;
 
 CREATE TABLE ma_beneficiarysummary2008 AS TABLE desynpuf_beneficiarysummary2008;
 CREATE TABLE ma_beneficiarysummary2009 AS TABLE desynpuf_beneficiarysummary2009;
@@ -55,8 +69,6 @@ OWNED BY ma_beneficiarysummary2008.bs_id;
 UPDATE ma_beneficiarysummary2008
 SET bs_id = nextval('bs_id_seq');
 
-SELECT desynpuf_id, bs_id FROM ma_beneficiarysummary2008 ORDER BY bs_id LIMIT 20;
-
 ALTER TABLE ma_beneficiarysummary2008 ADD PRIMARY KEY (bs_id);
 
 -- --------------------------
@@ -71,8 +83,6 @@ SET bs_id = nextval('bs_id_seq');
 
 ALTER TABLE ma_beneficiarysummary2009 ADD PRIMARY KEY (bs_id);
 
-SELECT desynpuf_id, bs_id FROM ma_beneficiarysummary2009 ORDER BY bs_id LIMIT 20;
-
 -- --------------------------
 
 ALTER TABLE ma_beneficiarysummary2010 DROP COLUMN IF EXISTS primary_key;
@@ -84,8 +94,6 @@ UPDATE ma_beneficiarysummary2010
 SET bs_id = nextval('bs_id_seq');
 
 ALTER TABLE ma_beneficiarysummary2010 ADD PRIMARY KEY (bs_id);
-
-SELECT desynpuf_id, bs_id FROM ma_beneficiarysummary2010 ORDER BY bs_id LIMIT 20;
 
 -- --------------------------
 
@@ -220,23 +228,42 @@ DROP TABLE ma_beneficiarysummary2010;
 --  Collect & Identify the distinct NDC codes that are used in the ma_rxdrugevents table
 -- --------------------------------------------------------------------------------------------------------------------
 
-DROP TABLE IF EXISTS ndc_desynpuf;
-CREATE TABLE ndc_desynpuf (
+DROP TABLE IF EXISTS ma_ndc;
+CREATE TABLE ma_ndc (
     ndc11 VARCHAR UNIQUE,
-    matched BOOLEAN,
     desc_long VARCHAR
 );
 
-INSERT INTO ndc_desynpuf (ndc11, matched, desc_long)
+INSERT INTO ma_ndc (ndc11, matched, desc_long)
 SELECT ndc11, False, NULL 
 FROM ma_rxdrugevents rde
 WHERE NOT rde.ndc11 IS NULL
 ON CONFLICT DO NOTHING;
 
 
-SELECT COUNT(*) FROM ndc_desynpuf;
+SELECT COUNT(*) FROM ma_ndc;
 
 --      RESULT: 268563
+
+--  Sort throught the NDC codes in the DeSynPUF database that can be identified, and the ones that cant
+
+UPDATE ma_ndc a
+SET matched = TRUE,
+    desc_long = c.desc_long
+FROM ndc_combined c
+WHERE a.ndc11 = c.ndc11;
+
+
+SELECT matched, COUNT(*) 
+    FROM ma_ndc 
+    GROUP BY matched;
+
+
+--      RESULTS:
+--            False	105478
+--            True	163085
+
+--    60.7 % of the NDC codes referred to in the desynpuf dataset have matching descriptions
 
 
 -- ------------------------------------------------------------------------------------------------------------------
@@ -247,7 +274,6 @@ SELECT COUNT(*) FROM ndc_desynpuf;
 DROP TABLE IF EXISTS ma_icd;
 CREATE TABLE ma_icd (
     icd9 VARCHAR UNIQUE,
-    matched BOOLEAN,
     description VARCHAR
 );
 
@@ -302,7 +328,7 @@ SELECT * FROM identify_ma_icd (table_name => 'ma_carrierclaims', icd_col => 'icd
 
 SELECT COUNT(*) FROM ma_icd;
 
---      RESULT: 
+--      RESULT: 13216
 
 SELECT * FROM identify_ma_icd (table_name => 'ma_carrierclaims', icd_col => 'line_icd9_dgns_cd_1');
 SELECT * FROM identify_ma_icd (table_name => 'ma_carrierclaims', icd_col => 'line_icd9_dgns_cd_2');
@@ -319,7 +345,7 @@ SELECT * FROM identify_ma_icd (table_name => 'ma_carrierclaims', icd_col => 'lin
 
 SELECT COUNT(*) FROM ma_icd;
 
---      RESULT: 
+--      RESULT: 13340
 
 
 -- Inpatient Claims
@@ -337,7 +363,7 @@ SELECT * FROM identify_ma_icd (table_name => 'ma_inpatientclaims', icd_col => 'i
 
 SELECT COUNT(*) FROM ma_icd;
 
---      RESULT: 
+--      RESULT: 13384
 
 SELECT * FROM identify_ma_icd (table_name => 'ma_inpatientclaims', icd_col => 'icd9_prcdr_cd_1');
 SELECT * FROM identify_ma_icd (table_name => 'ma_inpatientclaims', icd_col => 'icd9_prcdr_cd_2');
@@ -348,7 +374,7 @@ SELECT * FROM identify_ma_icd (table_name => 'ma_inpatientclaims', icd_col => 'i
 
 SELECT COUNT(*) FROM ma_icd;
 
---      RESULT: 
+--      RESULT: 14156
 
 
 -- Outpatient Claims
@@ -366,7 +392,7 @@ SELECT * FROM identify_ma_icd (table_name => 'ma_outpatientclaims', icd_col => '
 
 SELECT COUNT(*) FROM ma_icd;
 
---      RESULT: 
+--      RESULT: 14284
 
 
 SELECT * FROM identify_ma_icd (table_name => 'ma_outpatientclaims', icd_col => 'icd9_prcdr_cd_1');
@@ -378,8 +404,30 @@ SELECT * FROM identify_ma_icd (table_name => 'ma_outpatientclaims', icd_col => '
 
 SELECT COUNT(*) FROM ma_icd;
 
---      RESULT: 
+--      RESULT: 14284
 
+
+--  Sort throught the ICD codes in the DeSynPUF database that can be identified, and the ones that cant
+
+UPDATE ma_icd a
+SET matched = TRUE,
+    description = i.description
+FROM icd9 i
+WHERE a.icd9 = i.code;
+
+
+SELECT matched, COUNT(*) 
+    FROM ma_icd 
+    GROUP BY matched;
+
+--      RESULTS:
+--            False	2305
+--            True	11979
+
+--    83.9 % of the ICD codes referred to in the desynpuf dataset have matching descriptions
+
+
+ALTER TABLE ma_icd ADD COLUMN icd_id SERIAL PRIMARY KEY;
 
 
 -- ------------------------------------------------------------------------------------------------------------------
@@ -389,7 +437,6 @@ SELECT COUNT(*) FROM ma_icd;
 DROP TABLE IF EXISTS ma_hcpcs;
 CREATE TABLE ma_hcpcs (
     hcpcs VARCHAR UNIQUE,
-    matched BOOLEAN,
     description VARCHAR
 );
 
@@ -531,6 +578,7 @@ AlTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_43;
 AlTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_44;
 AlTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_45;
 
+
 -- Outpatient Claims
 
 SELECT * FROM identify_ma_hcpcs (table_name => 'ma_outpatientclaims', hcpcs_col => 'hcpcs_cd_1');
@@ -581,7 +629,7 @@ SELECT * FROM identify_ma_hcpcs (table_name => 'ma_outpatientclaims', hcpcs_col 
 
 SELECT COUNT(*) FROM ma_hcpcs;
 
---      RESULT: 
+--      RESULT: 5618
 
 
 -- Carrier Claims
@@ -602,36 +650,622 @@ SELECT * FROM identify_ma_hcpcs (table_name => 'ma_carrierclaims', hcpcs_col => 
 
 SELECT COUNT(*) FROM ma_hcpcs;
 
---      RESULT: 
+--      RESULT: 8991
 
-/*
 
---  Sort throught the NDC codes in the DeSynPUF database that can be identified, and the ones that cant
--- --------------------------------------------------------------------------------------------------------------------
+--  Sort throught the HCPCS codes in the DeSynPUF database that can be identified, and the ones that cant
 
-UPDATE ndc_desynpuf a
+UPDATE ma_hcpcs a
 SET matched = TRUE,
-    desc_long = c.desc_long
-FROM ndc_combined c
-WHERE a.ndc11 = c.ndc11;
+    description = h.desc_long
+FROM hcpcs h
+WHERE a.hcpcs = h.hcpcs;
 
 
 SELECT matched, COUNT(*) 
-    FROM ndc_desynpuf 
+    FROM ma_hcpcs 
     GROUP BY matched;
 
+--      RESULTS:
+--            False	306
+--            True	8685
+
+--    96.6 % of the HCPCS codes referred to in the desynpuf dataset have matching descriptions
+
+
+*/
+
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Convert desynpuf_id to INTEGER
+-- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+DROP TABLE IF EXISTS patient_id_conversion;
+CREATE TABLE patient_id_conversion (
+    beneficiary_id BIGINT UNIQUE,
+    patient_id SERIAL PRIMARY KEY
+);
+
+INSERT INTO patient_id_conversion (beneficiary_id)
+SELECT desynpuf_id
+FROM ma_beneficiarySummary
+ON CONFLICT DO NOTHING;
+
+
+ALTER TABLE ma_beneficiarysummary ADD COLUMN patient_id INTEGER;
+
+UPDATE ma_beneficiarysummary m
+SET patient_id = c.patient_id
+FROM patient_id_conversion c
+WHERE m.desynpuf_id = c.beneficiary_id;
+
+
+ALTER TABLE ma_beneficiarysummary DROP COLUMN desynpuf_id;
+
+
+ALTER TABLE ma_carrierclaims ADD COLUMN patient_id INTEGER;
+
+UPDATE ma_carrierclaims m
+SET patient_id = c.patient_id
+FROM patient_id_conversion c
+WHERE m.desynpuf_id = c.beneficiary_id;
+
+
+ALTER TABLE ma_carrierclaims DROP COLUMN desynpuf_id;
+
+
+ALTER TABLE ma_inpatientclaims ADD COLUMN patient_id INTEGER;
+
+UPDATE ma_inpatientclaims m
+SET patient_id = c.patient_id
+FROM patient_id_conversion c
+WHERE m.desynpuf_id = c.beneficiary_id;
+
+ALTER TABLE ma_inpatientclaims DROP COLUMN desynpuf_id;
+
+
+ALTER TABLE ma_outpatientclaims ADD COLUMN patient_id INTEGER;
+
+UPDATE ma_outpatientclaims m
+SET patient_id = c.patient_id
+FROM patient_id_conversion c
+WHERE m.desynpuf_id = c.beneficiary_id;
+
+ALTER TABLE ma_outpatientclaims DROP COLUMN desynpuf_id;
+
+
+ALTER TABLE ma_rxdrugevents ADD COLUMN patient_id INTEGER;
+
+UPDATE ma_rxdrugevents m
+SET patient_id = c.patient_id
+FROM patient_id_conversion c
+WHERE m.desynpuf_id = c.beneficiary_id;
+
+ALTER TABLE ma_rxdrugevents DROP COLUMN desynpuf_id;
+
+
+DROP TABLE IF EXISTS patient_id_conversion;
+
+
+-- --------------------------------------------------------------------------------------------------------------------
+-- Truncate numeric columns to INTEGER
+-- --------------------------------------------------------------------------------------------------------------------
+
+DROP FUNCTION IF EXISTS cast_col;
+
+CREATE OR REPLACE FUNCTION cast_col (
+   table_name VARCHAR,
+   col_name VARCHAR
+)
+
+RETURNS TABLE ( 
+	c BIGINT
+)
+
+LANGUAGE plpgsql
+
+AS $$
+	
+DECLARE
+
+	col_name_OLD VARCHAR;
+
+
+BEGIN
+
+    col_name_OLD := col_name || '_OLD';
+
+	EXECUTE  format('ALTER TABLE %I RENAME COLUMN %I TO %I;',
+                table_name, col_name, col_name_OLD);
+
+	EXECUTE  format('ALTER TABLE %I ADD COLUMN %I INTEGER;',
+                table_name, col_name);
+
+	EXECUTE  format('UPDATE %I SET %I = CAST(%I AS INTEGER);',
+                table_name, col_name, col_name_OLD);
+
+	EXECUTE  format('ALTER TABLE %I DROP COLUMN %I;',
+                table_name, col_name_OLD);
+
+	RETURN QUERY EXECUTE format('SELECT COUNT(*) FROM %I;', table_name);
+
+END
+$$;
+
+
+-- Beneficiary Summary
+
+SELECT cast_col('ma_beneficiarysummary', 'medreimb_ip');
+SELECT cast_col('ma_beneficiarysummary', 'benres_ip');
+SELECT cast_col('ma_beneficiarysummary', 'pppymt_ip');
+SELECT cast_col('ma_beneficiarysummary', 'medreimb_op');
+SELECT cast_col('ma_beneficiarysummary', 'benres_op');
+SELECT cast_col('ma_beneficiarysummary', 'pppymt_op');
+SELECT cast_col('ma_beneficiarysummary', 'medreimb_car');
+SELECT cast_col('ma_beneficiarysummary', 'benres_car');
+SELECT cast_col('ma_beneficiarysummary', 'pppymt_car');
+
+-- Carrier Claims
+
+SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_1');
+SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_2');
+SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_3');
+SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_4');
+SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_5');
+SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_6');
+SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_7');
+
+SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_8');
+SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_9');
+SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_10');
+SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_11');
+SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_12');
+SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_13');
+
+SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_1');
+SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_2');
+SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_3');
+SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_4');
+SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_5');
+SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_6');
+SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_7');
+SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_8');
+SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_9');
+SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_10');
+SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_11');
+SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_12');
+SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_13');
+
+SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_1');
+SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_2');
+SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_3');
+SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_4');
+SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_5');
+SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_6');
+SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_7');
+SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_8');
+SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_9');
+SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_10');
+SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_11');
+SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_12');
+SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_13');
+
+SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_1');
+SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_2');
+SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_3');
+SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_4');
+SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_5');
+SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_6');
+SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_7');
+SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_8');
+SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_9');
+SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_10');
+SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_11');
+SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_12');
+SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_13');
+
+SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_1');
+SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_2');
+SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_3');
+SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_4');
+SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_5');
+SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_6');
+SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_7');
+SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_8');
+SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_9');
+SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_10');
+SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_11');
+SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_12');
+SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_13');
+
+-- Inpatient Claims
+
+SELECT cast_col('ma_inpatientclaims', 'clm_pmt_amt');
+SELECT cast_col('ma_inpatientclaims', 'nch_prmry_pyr_clm_pd_amt');
+SELECT cast_col('ma_inpatientclaims', 'clm_pass_thru_per_diem_amt');
+SELECT cast_col('ma_inpatientclaims', 'nch_bene_ip_ddctbl_amt');
+SELECT cast_col('ma_inpatientclaims', 'nch_bene_pta_coinsrnc_lblty_am');
+SELECT cast_col('ma_inpatientclaims', 'nch_bene_blood_ddctbl_lblty_am');
+
+-- Outpatient Claims
+
+SELECT cast_col('ma_outpatientclaims', 'clm_pmt_amt');
+SELECT cast_col('ma_outpatientclaims', 'nch_prmry_pyr_clm_pd_amt');
+SELECT cast_col('ma_outpatientclaims', 'nch_bene_blood_ddctbl_lblty_am');
+SELECT cast_col('ma_outpatientclaims', 'nch_bene_ptb_ddctbl_amt');
+SELECT cast_col('ma_outpatientclaims', 'nch_bene_ptb_coinsrnc_amt');
+
+
+-- --------------------------------------------------------------------------------------------------------------------
+-- Correlate NDC codes to Rx Drug Events
+-- --------------------------------------------------------------------------------------------------------------------
+
+ALTER TABLE ma_ndc ADD COLUMN ndc11_id SERIAL PRIMARY KEY;
+
+ALTER TABLE ma_rxdrugevents ADD COLUMN ndc11_id INTEGER;
+
+UPDATE ma_rxdrugevents a
+SET ndc11_id = b.ndc11_id
+FROM ma_ndc b
+WHERE a.ndc11 = b.ndc11;
+
+ALTER TABLE ma_rxdrugevents DROP COLUMN ndc11;
+
+
+-- --------------------------------------------------------------------------------------------------------------------
+-- Correlate ICD codes to each table
+-- --------------------------------------------------------------------------------------------------------------------
+
+DROP FUNCTION IF EXISTS correllate_icd;
+
+CREATE OR REPLACE FUNCTION correllate_icd (
+   source_table_name VARCHAR,
+   dest_table_name VARCHAR,
+   source_col_name VARCHAR
+)
+
+RETURNS TABLE ( 
+	c BIGINT
+)
+
+LANGUAGE plpgsql
+
+AS $$
+	
+
+BEGIN
+
+	EXECUTE  format('INSERT INTO %1$I '
+                    || 'SELECT %2$I.%3$I, %5$I.%4$I '
+                    || 'FROM %5$I '
+                    || 'INNER JOIN %2$I '
+                    || 'ON %5$I.%6$I = %2$I.%7$I;',
+                dest_table_name,    -- 1
+                'ma_icd',           -- 2
+                'icd_id',           -- 3
+                'clm_id',           -- 4
+                source_table_name,  -- 5
+                source_col_name,    -- 6
+                'icd9');            -- 7
+
+	RETURN QUERY EXECUTE format('SELECT COUNT(*) FROM %I;', 'ma_icd');
+
+END
+$$;
+
+
+-- EXAMPLE:
+
+--         INSERT INTO ma_ic_icd9_dgns_cd
+--         SELECT ma_icd.icd_id, ma_inpatientclaims.clm_id
+--         FROM ma_inpatientclaims
+--             INNER JOIN ma_icd
+--             ON ma_inpatientclaims.icd9_dgns_cd_1 = ma_icd.icd9;
+
+
+
+-- Inpatient Claims
+-- ------------------------------------------------------------------------------------------------
+
+DROP TABLE IF EXISTS ma_ic_icd9_dgns_cd;
+CREATE TABLE ma_ic_icd9_dgns_cd (
+    icd9_id INTEGER,
+    clm_id BIGINT
+);
+
+SELECT * FROM correllate_icd('ma_inpatientclaims', 'ma_ic_icd9_dgns_cd', 'icd9_dgns_cd_1');
+SELECT * FROM correllate_icd('ma_inpatientclaims', 'ma_ic_icd9_dgns_cd', 'icd9_dgns_cd_2');
+SELECT * FROM correllate_icd('ma_inpatientclaims', 'ma_ic_icd9_dgns_cd', 'icd9_dgns_cd_3');
+SELECT * FROM correllate_icd('ma_inpatientclaims', 'ma_ic_icd9_dgns_cd', 'icd9_dgns_cd_4');
+SELECT * FROM correllate_icd('ma_inpatientclaims', 'ma_ic_icd9_dgns_cd', 'icd9_dgns_cd_5');
+SELECT * FROM correllate_icd('ma_inpatientclaims', 'ma_ic_icd9_dgns_cd', 'icd9_dgns_cd_6');
+SELECT * FROM correllate_icd('ma_inpatientclaims', 'ma_ic_icd9_dgns_cd', 'icd9_dgns_cd_7');
+SELECT * FROM correllate_icd('ma_inpatientclaims', 'ma_ic_icd9_dgns_cd', 'icd9_dgns_cd_8');
+SELECT * FROM correllate_icd('ma_inpatientclaims', 'ma_ic_icd9_dgns_cd', 'icd9_dgns_cd_9');
+SELECT * FROM correllate_icd('ma_inpatientclaims', 'ma_ic_icd9_dgns_cd', 'icd9_dgns_cd_10');
+
+SELECT COUNT(*) FROM ma_ic_icd9_dgns_cd;
+
+--      RESULT: 537271
+
+
+DROP TABLE IF EXISTS ma_ic_icd9_prcdr_cd;
+CREATE TABLE ma_ic_icd9_prcdr_cd (
+    icd9_id INTEGER,
+    clm_id BIGINT
+);
+
+SELECT * FROM correllate_icd('ma_inpatientclaims', 'ma_ic_icd9_prcdr_cd', 'icd9_prcdr_cd_1');
+SELECT * FROM correllate_icd('ma_inpatientclaims', 'ma_ic_icd9_prcdr_cd', 'icd9_prcdr_cd_2');
+SELECT * FROM correllate_icd('ma_inpatientclaims', 'ma_ic_icd9_prcdr_cd', 'icd9_prcdr_cd_3');
+SELECT * FROM correllate_icd('ma_inpatientclaims', 'ma_ic_icd9_prcdr_cd', 'icd9_prcdr_cd_4');
+SELECT * FROM correllate_icd('ma_inpatientclaims', 'ma_ic_icd9_prcdr_cd', 'icd9_prcdr_cd_5');
+SELECT * FROM correllate_icd('ma_inpatientclaims', 'ma_ic_icd9_prcdr_cd', 'icd9_prcdr_cd_6');
+
+SELECT COUNT(*) FROM ma_ic_icd9_prcdr_cd;
+
+--      RESULT: 95871
+
+
+ALTER TABLE ma_inpatientclaims DROP COLUMN icd9_dgns_cd_1;
+ALTER TABLE ma_inpatientclaims DROP COLUMN icd9_dgns_cd_2;
+ALTER TABLE ma_inpatientclaims DROP COLUMN icd9_dgns_cd_3;
+ALTER TABLE ma_inpatientclaims DROP COLUMN icd9_dgns_cd_4;
+ALTER TABLE ma_inpatientclaims DROP COLUMN icd9_dgns_cd_5;
+ALTER TABLE ma_inpatientclaims DROP COLUMN icd9_dgns_cd_6;
+ALTER TABLE ma_inpatientclaims DROP COLUMN icd9_dgns_cd_7;
+ALTER TABLE ma_inpatientclaims DROP COLUMN icd9_dgns_cd_8;
+ALTER TABLE ma_inpatientclaims DROP COLUMN icd9_dgns_cd_9;
+ALTER TABLE ma_inpatientclaims DROP COLUMN icd9_dgns_cd_10;
+
+ALTER TABLE ma_inpatientclaims DROP COLUMN icd9_prcdr_cd_1;
+ALTER TABLE ma_inpatientclaims DROP COLUMN icd9_prcdr_cd_2;
+ALTER TABLE ma_inpatientclaims DROP COLUMN icd9_prcdr_cd_3;
+ALTER TABLE ma_inpatientclaims DROP COLUMN icd9_prcdr_cd_4;
+ALTER TABLE ma_inpatientclaims DROP COLUMN icd9_prcdr_cd_5;
+ALTER TABLE ma_inpatientclaims DROP COLUMN icd9_prcdr_cd_6;
+
+
+-- Outpatient Claims
+-- ------------------------------------------------------------------------------------------------
+
+DROP TABLE IF EXISTS ma_oc_icd9_dgns_cd;
+CREATE TABLE ma_oc_icd9_dgns_cd (
+    icd9_id INTEGER,
+    clm_id BIGINT
+);
+
+SELECT * FROM correllate_icd('ma_outpatientclaims', 'ma_oc_icd9_dgns_cd', 'icd9_dgns_cd_1');
+SELECT * FROM correllate_icd('ma_outpatientclaims', 'ma_oc_icd9_dgns_cd', 'icd9_dgns_cd_2');
+SELECT * FROM correllate_icd('ma_outpatientclaims', 'ma_oc_icd9_dgns_cd', 'icd9_dgns_cd_3');
+SELECT * FROM correllate_icd('ma_outpatientclaims', 'ma_oc_icd9_dgns_cd', 'icd9_dgns_cd_4');
+SELECT * FROM correllate_icd('ma_outpatientclaims', 'ma_oc_icd9_dgns_cd', 'icd9_dgns_cd_5');
+SELECT * FROM correllate_icd('ma_outpatientclaims', 'ma_oc_icd9_dgns_cd', 'icd9_dgns_cd_6');
+SELECT * FROM correllate_icd('ma_outpatientclaims', 'ma_oc_icd9_dgns_cd', 'icd9_dgns_cd_7');
+SELECT * FROM correllate_icd('ma_outpatientclaims', 'ma_oc_icd9_dgns_cd', 'icd9_dgns_cd_8');
+SELECT * FROM correllate_icd('ma_outpatientclaims', 'ma_oc_icd9_dgns_cd', 'icd9_dgns_cd_9');
+SELECT * FROM correllate_icd('ma_outpatientclaims', 'ma_oc_icd9_dgns_cd', 'icd9_dgns_cd_10');
+
+SELECT COUNT(*) FROM ma_oc_icd9_dgns_cd;
+
+--      RESULT: 2073796
+
+
+DROP TABLE IF EXISTS ma_oc_icd9_prcdr_cd;
+CREATE TABLE ma_oc_icd9_prcdr_cd (
+    icd9_id INTEGER,
+    clm_id BIGINT
+);
+
+SELECT * FROM correllate_icd('ma_outpatientclaims', 'ma_oc_icd9_prcdr_cd', 'icd9_prcdr_cd_1');
+SELECT * FROM correllate_icd('ma_outpatientclaims', 'ma_oc_icd9_prcdr_cd', 'icd9_prcdr_cd_2');
+SELECT * FROM correllate_icd('ma_outpatientclaims', 'ma_oc_icd9_prcdr_cd', 'icd9_prcdr_cd_3');
+SELECT * FROM correllate_icd('ma_outpatientclaims', 'ma_oc_icd9_prcdr_cd', 'icd9_prcdr_cd_4');
+SELECT * FROM correllate_icd('ma_outpatientclaims', 'ma_oc_icd9_prcdr_cd', 'icd9_prcdr_cd_5');
+SELECT * FROM correllate_icd('ma_outpatientclaims', 'ma_oc_icd9_prcdr_cd', 'icd9_prcdr_cd_6');
+
+SELECT COUNT(*) FROM ma_oc_icd9_prcdr_cd;
+
+--      RESULT: 508
+
+ALTER TABLE ma_outpatientclaims DROP COLUMN icd9_dgns_cd_1;
+ALTER TABLE ma_outpatientclaims DROP COLUMN icd9_dgns_cd_2;
+ALTER TABLE ma_outpatientclaims DROP COLUMN icd9_dgns_cd_3;
+ALTER TABLE ma_outpatientclaims DROP COLUMN icd9_dgns_cd_4;
+ALTER TABLE ma_outpatientclaims DROP COLUMN icd9_dgns_cd_5;
+ALTER TABLE ma_outpatientclaims DROP COLUMN icd9_dgns_cd_6;
+ALTER TABLE ma_outpatientclaims DROP COLUMN icd9_dgns_cd_7;
+ALTER TABLE ma_outpatientclaims DROP COLUMN icd9_dgns_cd_8;
+ALTER TABLE ma_outpatientclaims DROP COLUMN icd9_dgns_cd_9;
+ALTER TABLE ma_outpatientclaims DROP COLUMN icd9_dgns_cd_10;
+
+ALTER TABLE ma_outpatientclaims DROP COLUMN icd9_prcdr_cd_1;
+ALTER TABLE ma_outpatientclaims DROP COLUMN icd9_prcdr_cd_2;
+ALTER TABLE ma_outpatientclaims DROP COLUMN icd9_prcdr_cd_3;
+ALTER TABLE ma_outpatientclaims DROP COLUMN icd9_prcdr_cd_4;
+ALTER TABLE ma_outpatientclaims DROP COLUMN icd9_prcdr_cd_5;
+ALTER TABLE ma_outpatientclaims DROP COLUMN icd9_prcdr_cd_6;
+
 /*
-      RESULTS:
-            False	105478
-            True	163085
 
-    60.7 % of the NDC codes referred to in the desynpuf dataset have matching descriptions
+-- Carrier Claims
+-- ------------------------------------------------------------------------------------------------
+
+DROP TABLE IF EXISTS ma_cc_icd9_dgns_cd;
+CREATE TABLE ma_cc_icd9_dgns_cd (
+    icd9_id INTEGER,
+    clm_id BIGINT
+);
+
+SELECT * FROM correllate_icd('ma_carrierclaims', 'ma_cc_icd9_dgns_cd', 'icd9_dgns_cd_1');
+SELECT * FROM correllate_icd('ma_carrierclaims', 'ma_cc_icd9_dgns_cd', 'icd9_dgns_cd_2');
+SELECT * FROM correllate_icd('ma_carrierclaims', 'ma_cc_icd9_dgns_cd', 'icd9_dgns_cd_3');
+SELECT * FROM correllate_icd('ma_carrierclaims', 'ma_cc_icd9_dgns_cd', 'icd9_dgns_cd_4');
+SELECT * FROM correllate_icd('ma_carrierclaims', 'ma_cc_icd9_dgns_cd', 'icd9_dgns_cd_5');
+SELECT * FROM correllate_icd('ma_carrierclaims', 'ma_cc_icd9_dgns_cd', 'icd9_dgns_cd_6');
+SELECT * FROM correllate_icd('ma_carrierclaims', 'ma_cc_icd9_dgns_cd', 'icd9_dgns_cd_7');
+SELECT * FROM correllate_icd('ma_carrierclaims', 'ma_cc_icd9_dgns_cd', 'icd9_dgns_cd_8');
+
+SELECT COUNT(*) FROM ma_cc_icd9_dgns_cd;
+
+--      RESULT: 
+
+
+ALTER TABLE ma_carrierclaims DROP COLUMN icd9_dgns_cd_1;
+ALTER TABLE ma_carrierclaims DROP COLUMN icd9_dgns_cd_2;
+ALTER TABLE ma_carrierclaims DROP COLUMN icd9_dgns_cd_3;
+ALTER TABLE ma_carrierclaims DROP COLUMN icd9_dgns_cd_4;
+ALTER TABLE ma_carrierclaims DROP COLUMN icd9_dgns_cd_5;
+ALTER TABLE ma_carrierclaims DROP COLUMN icd9_dgns_cd_6;
+ALTER TABLE ma_carrierclaims DROP COLUMN icd9_dgns_cd_7;
+ALTER TABLE ma_carrierclaims DROP COLUMN icd9_dgns_cd_8;
+
+
+-- ------------------------------------------------------------------------------------------------
+
+--      The carrier claims are separated by line item. Convert the ICD line diagnoses to 
+--      corresponding IDs. We might separate line items later.
+
+ALTER TABLE ma_carrierclaims ADD COLUMN line_icd9_id_1 INTEGER;
+ALTER TABLE ma_carrierclaims ADD COLUMN line_icd9_id_2 INTEGER;
+ALTER TABLE ma_carrierclaims ADD COLUMN line_icd9_id_3 INTEGER;
+ALTER TABLE ma_carrierclaims ADD COLUMN line_icd9_id_4 INTEGER;
+ALTER TABLE ma_carrierclaims ADD COLUMN line_icd9_id_5 INTEGER;
+ALTER TABLE ma_carrierclaims ADD COLUMN line_icd9_id_6 INTEGER;
+ALTER TABLE ma_carrierclaims ADD COLUMN line_icd9_id_7 INTEGER;
+ALTER TABLE ma_carrierclaims ADD COLUMN line_icd9_id_8 INTEGER;
+ALTER TABLE ma_carrierclaims ADD COLUMN line_icd9_id_9 INTEGER;
+ALTER TABLE ma_carrierclaims ADD COLUMN line_icd9_id_10 INTEGER;
+ALTER TABLE ma_carrierclaims ADD COLUMN line_icd9_id_11 INTEGER;
+ALTER TABLE ma_carrierclaims ADD COLUMN line_icd9_id_12 INTEGER;
+ALTER TABLE ma_carrierclaims ADD COLUMN line_icd9_id_13 INTEGER;
+
+
+UPDATE ma_carrierclaims a
+SET line_icd9_id_1 = b.ndc11_id
+FROM ma_ndc b
+WHERE a.line_icd9_dgns_cd_1 = b.ndc11;
+
+UPDATE ma_carrierclaims a
+SET line_icd9_id_2 = b.ndc11_id
+FROM ma_ndc b
+WHERE a.line_icd9_dgns_cd_2 = b.ndc11;
+
+UPDATE ma_carrierclaims a
+SET line_icd9_id_3 = b.ndc11_id
+FROM ma_ndc b
+WHERE a.line_icd9_dgns_cd_3 = b.ndc11;
+
+UPDATE ma_carrierclaims a
+SET line_icd9_id_4 = b.ndc11_id
+FROM ma_ndc b
+WHERE a.line_icd9_dgns_cd_4 = b.ndc11;
+
+UPDATE ma_carrierclaims a
+SET line_icd9_id_5 = b.ndc11_id
+FROM ma_ndc b
+WHERE a.line_icd9_dgns_cd_5 = b.ndc11;
+
+UPDATE ma_carrierclaims a
+SET line_icd9_id_6 = b.ndc11_id
+FROM ma_ndc b
+WHERE a.line_icd9_dgns_cd_6 = b.ndc11;
+
+UPDATE ma_carrierclaims a
+SET line_icd9_id_7 = b.ndc11_id
+FROM ma_ndc b
+WHERE a.line_icd9_dgns_cd_7 = b.ndc11;
+
+UPDATE ma_carrierclaims a
+SET line_icd9_id_8 = b.ndc11_id
+FROM ma_ndc b
+WHERE a.line_icd9_dgns_cd_8 = b.ndc11;
+
+UPDATE ma_carrierclaims a
+SET line_icd9_id_9 = b.ndc11_id
+FROM ma_ndc b
+WHERE a.line_icd9_dgns_cd_9 = b.ndc11;
+
+UPDATE ma_carrierclaims a
+SET line_icd9_id_10 = b.ndc11_id
+FROM ma_ndc b
+WHERE a.line_icd9_dgns_cd_10 = b.ndc11;
+
+UPDATE ma_carrierclaims a
+SET line_icd9_id_11 = b.ndc11_id
+FROM ma_ndc b
+WHERE a.line_icd9_dgns_cd_11 = b.ndc11;
+
+UPDATE ma_carrierclaims a
+SET line_icd9_id_12 = b.ndc11_id
+FROM ma_ndc b
+WHERE a.line_icd9_dgns_cd_12 = b.ndc11;
+
+UPDATE ma_carrierclaims a
+SET line_icd9_id_13 = b.ndc11_id
+FROM ma_ndc b
+WHERE a.line_icd9_dgns_cd_13 = b.ndc11;
+
+ALTER TABLE ma_carrierclaims DROP COLUMN line_icd9_dgns_cd_1;
+ALTER TABLE ma_carrierclaims DROP COLUMN line_icd9_dgns_cd_2;
+ALTER TABLE ma_carrierclaims DROP COLUMN line_icd9_dgns_cd_3;
+ALTER TABLE ma_carrierclaims DROP COLUMN line_icd9_dgns_cd_4;
+ALTER TABLE ma_carrierclaims DROP COLUMN line_icd9_dgns_cd_5;
+ALTER TABLE ma_carrierclaims DROP COLUMN line_icd9_dgns_cd_6;
+ALTER TABLE ma_carrierclaims DROP COLUMN line_icd9_dgns_cd_7;
+ALTER TABLE ma_carrierclaims DROP COLUMN line_icd9_dgns_cd_8;
+ALTER TABLE ma_carrierclaims DROP COLUMN line_icd9_dgns_cd_9;
+ALTER TABLE ma_carrierclaims DROP COLUMN line_icd9_dgns_cd_10;
+ALTER TABLE ma_carrierclaims DROP COLUMN line_icd9_dgns_cd_11;
+ALTER TABLE ma_carrierclaims DROP COLUMN line_icd9_dgns_cd_12;
+ALTER TABLE ma_carrierclaims DROP COLUMN line_icd9_dgns_cd_13;
+
+
+-- --------------------------------------------------------------------------------------------------------------------
+-- Correlate HCPCS codes to each table
+-- --------------------------------------------------------------------------------------------------------------------
+
+DROP FUNCTION IF EXISTS correllate_hcpcs;
+
+CREATE OR REPLACE FUNCTION correllate_hcpcs (
+   source_table_name VARCHAR,
+   dest_table_name VARCHAR,
+   source_col_name VARCHAR
+)
+
+RETURNS TABLE ( 
+	c BIGINT
+)
+
+LANGUAGE plpgsql
+
+AS $$
+	
+
+BEGIN
+
+	EXECUTE  format('INSERT INTO %1$I '
+                    || 'SELECT %2$I.%3$I, %5$I.%4$I '
+                    || 'FROM %5$I '
+                    || 'INNER JOIN %2$I '
+                    || 'ON %5$I.%6$I = %2$I.%7$I;',
+                dest_table_name,    -- 1
+                'ma_hcpcs',           -- 2
+                'icd_id',           -- 3
+                'clm_id',           -- 4
+                source_table_name,  -- 5
+                source_col_name,    -- 6
+                'hcpcs');            -- 7
+
+	RETURN QUERY EXECUTE format('SELECT COUNT(*) FROM %I;', 'ma_hcpcs');
+
+END
+$$;
+
 */
-*/
 
-
--- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------------------------------------------
 -- Run cleanup of dead tuples & maximize efficiency
--- ---------------------------------------------------------------------------------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------------------------------------------
 
 VACUUM FULL ANALYZE;

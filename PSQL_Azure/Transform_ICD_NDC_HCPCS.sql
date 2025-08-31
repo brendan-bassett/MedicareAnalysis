@@ -650,24 +650,3 @@ SELECT COUNT(*) FROM ndc_combined;
 
 --      RESULT: 596106      unique NDCs with descriptions 
 
--- --------------------------------------------------------------------------------------------------------------------
---  Clean up the extra data
--- --------------------------------------------------------------------------------------------------------------------
-
-
-DROP TABLE IF EXISTS ndc2008_listings;
-DROP TABLE IF EXISTS ndc2010_listings;
-DROP TABLE IF EXISTS ndc2012_listings;
-
-DROP TABLE IF EXISTS ndc2008_packages;
-DROP TABLE IF EXISTS ndc2010_packages;
-DROP TABLE IF EXISTS ndc2012_packages;
-
-DROP TABLE IF EXISTS ndc2018_package;
-DROP TABLE IF EXISTS ndc2025_package;
-
-DROP TABLE IF EXISTS ndc2018_product;
-DROP TABLE IF EXISTS ndc2025_product;
-
-
-VACUUM FULL ANALYZE;
