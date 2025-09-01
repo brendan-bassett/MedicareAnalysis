@@ -359,6 +359,12 @@ SELECT matched, COUNT(*)
 --    60.7 % of the NDC codes referred to in the desynpuf dataset have matching descriptions
 
 
+--      Create a unique ID number for each NDC code in the de-Syn-PUF dataset
+--      This allows us to refer to NDC codes using 4-byte integers instead of 12-byte varchars
+
+ALTER TABLE ma_ndc ADD COLUMN ndc11_id SERIAL PRIMARY KEY;
+
+
 -- ------------------------------------------------------------------------------------------------------------------
 -- Identify every unique ICD-9 code present in the deSynPUF dataset
 -- ------------------------------------------------------------------------------------------------------------------
@@ -500,7 +506,7 @@ SELECT COUNT(*) FROM ma_icd;
 --      RESULT: 14284
 
 
---  Sort throught the ICD codes in the DeSynPUF database that can be identified, and the ones that cant
+--  Indicate the ICD codes in the DeSynPUF database that have an identifying description, and the ones that dont
 
 UPDATE ma_icd a
 SET matched = TRUE,
@@ -519,6 +525,9 @@ SELECT matched, COUNT(*)
 
 --    83.9 % of the ICD codes referred to in the desynpuf dataset have matching descriptions
 
+
+--      Create a unique ID for each ICD code in the de-Syn-PUF dataset.
+--      This allows us to refer to ICD codes using 4-byte integers instead of 6-byte varchars
 
 ALTER TABLE ma_icd ADD COLUMN icd_id SERIAL PRIMARY KEY;
 
@@ -746,7 +755,7 @@ SELECT COUNT(*) FROM ma_hcpcs;
 --      RESULT: 8991
 
 
---  Sort throught the HCPCS codes in the DeSynPUF database that can be identified, and the ones that cant
+--  Indicate the HCPCS codes in the DeSynPUF database that have an identifying description, and the ones that dont
 
 UPDATE ma_hcpcs a
 SET matched = TRUE,
@@ -766,9 +775,22 @@ SELECT matched, COUNT(*)
 --    96.6 % of the HCPCS codes referred to in the desynpuf dataset have matching descriptions
 
 
+--      Create a unique ID number for each hcpcs code in the de-Syn-PUF dataset
+--      This allows us to refer to HCPCS codes using 4-byte integers instead of 6-byte varchars
+
+ALTER TABLE ma_hcpcs ADD COLUMN hcpcs_id SERIAL PRIMARY KEY;
+
+
 -- --------------------------------------------------------------------------------------------------------------------
 -- Convert desynpuf_id to INTEGER
 -- --------------------------------------------------------------------------------------------------------------------
+
+
+--      There are 116352 distinct beneficiary IDs referred to in the de-Syn-PUF dataset, so BIGINT (8 bytes) is 
+--      unnecessarily large.
+
+--      Create a new patient ID that is INTEGER (4 bytes) and convert beneficiary IDs to it int order to reduce 
+--      storage usage.
 
 DROP TABLE IF EXISTS patient_id_conversion;
 CREATE TABLE patient_id_conversion (
@@ -841,10 +863,16 @@ DROP TABLE IF EXISTS patient_id_conversion;
 -- Truncate numeric columns to INTEGER
 -- --------------------------------------------------------------------------------------------------------------------
 
+--      Nearly every dollar-value in the entire dataset does not contain cent-precision information. The data-type 
+--      "numeric" uses approximately 12 bytes each for this datset, which is quite unnecessary. We will convert all
+--      of these values to 4-byte integers to conserve on storage space. This truncates each value to dollar-precision.
+--      The casting of each value from Numeric to Integer uses a large amount of storage and processing time.
+
 --      ** THIS IS AN EXTREMELY RESOURCE-HEAVY OPERATION **
 
 --      Multiple instances of "vacuum" are used to limit the amount of storage used in this operation
---      Then the database is saved so this hopefully have to be completed again.
+--      Then the database is saved so this hopefully does not have to be completed again. This is why the
+--      Condense_DeSynPUF sql files are divided into two segments.
 
 
 DROP FUNCTION IF EXISTS cast_col;
@@ -1024,6 +1052,15 @@ VACUUM FULL ANALYZE;
 -- --------------------------------------------------------------------------------------------------------------------
 -- Copy Medicare-Analysis Tables as Save Point
 -- --------------------------------------------------------------------------------------------------------------------
+
+DROP TABLE IF EXISTS ma_bs_1;
+DROP TABLE IF EXISTS ma_cc_1;
+DROP TABLE IF EXISTS ma_h_1;
+DROP TABLE IF EXISTS ma_i_1;
+DROP TABLE IF EXISTS ma_ic_1;
+DROP TABLE IF EXISTS ma_n_1;
+DROP TABLE IF EXISTS ma_oc_1;
+DROP TABLE IF EXISTS ma_rde_1;
 
 ALTER TABLE ma_beneficiarysummary RENAME TO ma_bs_1;
 ALTER TABLE ma_carrierclaims RENAME TO ma_cc_1;

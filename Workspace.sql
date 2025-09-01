@@ -1,50 +1,40 @@
-SELECT tablename FROM pg_tables ORDER BY tablename;
 
-/*
-T_5352_44ab82a31a834b5b9e12f90c2c860193
-accounts
-county_codes
-desynpuf_beneficiarysummary2008
-desynpuf_beneficiarysummary2009
-desynpuf_beneficiarysummary2010
-desynpuf_carrierclaims
-desynpuf_inpatientclaims
-desynpuf_outpatientclaims
-desynpuf_rxdrugevents
-hcpcs
-icd9
-ma_beneficiarysummary
-ma_bs_1
-ma_carrierclaims
-ma_carrierclaims_line
-ma_cc_1
-ma_cc_icd9_dgns_cd
-ma_cc_icd9_prcdr_cd
-ma_h_1
-ma_hcpcs
-ma_i_1
-ma_ic_1
-ma_ic_icd9_dgns_cd
-ma_ic_icd9_prcdr_cd
-ma_icd
-ma_inpatientclaims
-ma_line_prcsg_ind_cd
-ma_n_1
-ma_ndc
-ma_oc_1
-ma_oc_icd9_dgns_cd
-ma_oc_icd9_prcdr_cd
-ma_outpatientclaims
-ma_rde_1
-ma_rxdrugevents
-ndc_combined
-sql_features
-sql_implementation_info
-sql_parts
-sql_sizing
-state_codes
-tracked_batches
-tracked_publications
-tracked_reconfigurations
-tracked_tables
-*/
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'ma_beneficiarysummary'
+ORDER BY column_name;
+
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'ma_carrierclaims'
+ORDER BY column_name;
+
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'ma_hcpcs'
+ORDER BY column_name;
+
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'ma_icd'
+ORDER BY column_name;
+
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'ma_inpatientclaims'
+ORDER BY column_name;
+
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'ma_ndc'
+ORDER BY column_name;
+
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'ma_outpatientclaims'
+ORDER BY column_name;
+
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'ma_rxdrugevents'
+ORDER BY column_name;

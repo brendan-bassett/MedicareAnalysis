@@ -106,6 +106,14 @@ q
 	pg_dump -v -U BBassett -d DeSynPUF_DB -F tar -f f:/MedicareAnalysis/all_db_backup.tar
 	
 
+// List columns & data types for a table
+// -----------------------------------------------------------------------------------------------------------
+
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'ma_inpatientclaims'
+ORDER BY column_name;
+
 
 // For Loop in Postgresql
 // -----------------------------------------------------------------------------------------------------------
