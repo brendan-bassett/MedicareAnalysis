@@ -75,6 +75,22 @@ CREATE TABLE ma_rxdrugevents AS TABLE desynpuf_rxdrugevents;
 
 
 -- --------------------------------------------------------------------------------------------------------------------
+-- Clean Up State & County Code Tables
+-- --------------------------------------------------------------------------------------------------------------------
+
+ALTER TABLE state_codes RENAME TO ma_statecodes;
+
+CREATE TABLE ma_countycodes AS TABLE county_codes;
+
+ALTER TABLE ma_countycodes DROP COLUMN eligibles;
+ALTER TABLE ma_countycodes DROP COLUMN enrollees;
+ALTER TABLE ma_countycodes DROP COLUMN part_a_aged;
+ALTER TABLE ma_countycodes DROP COLUMN part_ab_aged;
+ALTER TABLE ma_countycodes DROP COLUMN part_b_aged;
+ALTER TABLE ma_countycodes DROP COLUMN penetration;
+
+
+-- --------------------------------------------------------------------------------------------------------------------
 -- Create Table for Line Processing Indicator Code (used in carrier claims)
 -- --------------------------------------------------------------------------------------------------------------------
 
@@ -1047,38 +1063,43 @@ SELECT cast_col('ma_outpatientclaims', 'nch_bene_blood_ddctbl_lblty_am');
 SELECT cast_col('ma_outpatientclaims', 'nch_bene_ptb_ddctbl_amt');
 SELECT cast_col('ma_outpatientclaims', 'nch_bene_ptb_coinsrnc_amt');
 
+-- Rx Drug Events
+
+SELECT cast_col('ma_rxdrugevents', 'ptnt_pay_amt');
+SELECT cast_col('ma_rxdrugevents', 'tot_rx_cst_amt');
+
 VACUUM FULL ANALYZE;
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Copy Medicare-Analysis Tables as Save Point
 -- --------------------------------------------------------------------------------------------------------------------
 
-DROP TABLE IF EXISTS ma_bs_1;
-DROP TABLE IF EXISTS ma_cc_1;
-DROP TABLE IF EXISTS ma_h_1;
-DROP TABLE IF EXISTS ma_i_1;
-DROP TABLE IF EXISTS ma_ic_1;
-DROP TABLE IF EXISTS ma_n_1;
-DROP TABLE IF EXISTS ma_oc_1;
-DROP TABLE IF EXISTS ma_rde_1;
+DROP TABLE IF EXISTS ma1_bs;
+DROP TABLE IF EXISTS ma1_cc;
+DROP TABLE IF EXISTS ma1_h;
+DROP TABLE IF EXISTS ma1_i;
+DROP TABLE IF EXISTS ma1_ic;
+DROP TABLE IF EXISTS ma1_n;
+DROP TABLE IF EXISTS ma1_oc;
+DROP TABLE IF EXISTS ma1_rde;
 
-ALTER TABLE ma_beneficiarysummary RENAME TO ma_bs_1;
-ALTER TABLE ma_carrierclaims RENAME TO ma_cc_1;
-ALTER TABLE ma_hcpcs RENAME TO ma_h_1;
-ALTER TABLE ma_icd RENAME TO ma_i_1;
-ALTER TABLE ma_inpatientclaims RENAME TO ma_ic_1;
-ALTER TABLE ma_ndc RENAME TO ma_n_1;
-ALTER TABLE ma_outpatientclaims RENAME TO ma_oc_1;
-ALTER TABLE ma_rxdrugevents RENAME TO ma_rde_1;
+ALTER TABLE ma_beneficiarysummary RENAME TO ma1_bs;
+ALTER TABLE ma_carrierclaims RENAME TO ma1_cc;
+ALTER TABLE ma_hcpcs RENAME TO ma1_h;
+ALTER TABLE ma_icd RENAME TO ma1_i;
+ALTER TABLE ma_inpatientclaims RENAME TO ma1_ic;
+ALTER TABLE ma_ndc RENAME TO ma1_n;
+ALTER TABLE ma_outpatientclaims RENAME TO ma1_oc;
+ALTER TABLE ma_rxdrugevents RENAME TO ma1_rde;
 
-CREATE TABLE ma_beneficiarysummary AS TABLE ma_bs_1;
-CREATE TABLE ma_carrierclaims AS TABLE ma_cc_1;
-CREATE TABLE ma_hcpcs AS TABLE ma_h_1;
-CREATE TABLE ma_icd AS TABLE ma_i_1;
-CREATE TABLE ma_inpatientclaims AS TABLE ma_ic_1;
-CREATE TABLE ma_ndc AS TABLE ma_n_1;
-CREATE TABLE ma_outpatientclaims AS TABLE ma_oc_1;
-CREATE TABLE ma_rxdrugevents AS TABLE ma_rde_1;
+CREATE TABLE ma_beneficiarysummary AS TABLE ma1_bs;
+CREATE TABLE ma_carrierclaims AS TABLE ma1_cc;
+CREATE TABLE ma_hcpcs AS TABLE ma1_h;
+CREATE TABLE ma_icd AS TABLE ma1_i;
+CREATE TABLE ma_inpatientclaims AS TABLE ma1_ic;
+CREATE TABLE ma_ndc AS TABLE ma1_n;
+CREATE TABLE ma_outpatientclaims AS TABLE ma1_oc;
+CREATE TABLE ma_rxdrugevents AS TABLE ma1_rde;
 
 
 VACUUM FULL ANALYZE;

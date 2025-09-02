@@ -12,35 +12,34 @@
 -----------------------------------------------------------------------------------------------------------------------
 */
 
-/*
+
 -- --------------------------------------------------------------------------------------------------------------------
 -- Recover Medicare Analysis Tables from save point at end of Condense_DeSynPUF_1.sql
 -- --------------------------------------------------------------------------------------------------------------------
 
-
 DROP TABLE IF EXISTS ma_beneficiarysummary;
-CREATE TABLE ma_beneficiarysummary AS TABLE ma_bs_1;
+CREATE TABLE ma_beneficiarysummary AS TABLE ma1_bs;
 
 DROP TABLE IF EXISTS ma_carrierclaims;
-CREATE TABLE ma_carrierclaims AS TABLE ma_cc_1;
+CREATE TABLE ma_carrierclaims AS TABLE ma1_cc;
 
 DROP TABLE IF EXISTS ma_hcpcs;
-CREATE TABLE ma_hcpcs AS TABLE ma_h_1;
+CREATE TABLE ma_hcpcs AS TABLE ma1_h;
 
 DROP TABLE IF EXISTS ma_icd;
-CREATE TABLE ma_icd AS TABLE ma_i_1;
+CREATE TABLE ma_icd AS TABLE ma1_i;
 
 DROP TABLE IF EXISTS ma_inpatientclaims;
-CREATE TABLE ma_inpatientclaims AS TABLE ma_ic_1;
+CREATE TABLE ma_inpatientclaims AS TABLE ma1_ic;
 
 DROP TABLE IF EXISTS ma_ndc;
-CREATE TABLE ma_ndc AS TABLE ma_n_1;
+CREATE TABLE ma_ndc AS TABLE ma1_n;
 
 DROP TABLE IF EXISTS ma_outpatientclaims;
-CREATE TABLE ma_outpatientclaims AS TABLE ma_oc_1;
+CREATE TABLE ma_outpatientclaims AS TABLE ma1_oc;
 
 DROP TABLE IF EXISTS ma_rxdrugevents;
-CREATE TABLE ma_rxdrugevents AS TABLE ma_rde_1;
+CREATE TABLE ma_rxdrugevents AS TABLE ma1_rde;
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Separate single claim line items from Carrier Claims
@@ -657,6 +656,16 @@ $$;
 -- Inpatient Claims
 -- ------------------------------------------------------------------------------------------------
 
+ALTER TABLE ma_inpatientclaims ADD COLUMN admtng_icd_dgns_id INTEGER;
+
+UPDATE ma_inpatientclaims a
+SET admtng_icd_dgns_id = b.icd_id
+FROM ma_icd b
+WHERE a.admtng_icd9_dgns_cd = b.icd9;
+
+ALTER TABLE ma_inpatientclaims DROP COLUMN admtng_icd9_dgns_cd;
+
+
 DROP TABLE IF EXISTS ma_ic_icd9_dgns;
 CREATE TABLE ma_ic_icd9_dgns (
     icd9_id INTEGER,
@@ -717,6 +726,16 @@ ALTER TABLE ma_inpatientclaims DROP COLUMN icd9_prcdr_cd_6;
 
 -- Outpatient Claims
 -- ------------------------------------------------------------------------------------------------
+
+ALTER TABLE ma_outpatientclaims ADD COLUMN admtng_icd_dgns_id INTEGER;
+
+UPDATE ma_outpatientclaims a
+SET admtng_icd_dgns_id = b.icd_id
+FROM ma_icd b
+WHERE a.admtng_icd9_dgns_cd = b.icd9;
+
+ALTER TABLE ma_outpatientclaims DROP COLUMN admtng_icd9_dgns_cd;
+
 
 DROP TABLE IF EXISTS ma_oc_icd9_dgns;
 CREATE TABLE ma_oc_icd9_dgns (
@@ -874,8 +893,6 @@ $$;
 --        FROM ma_inpatientclaims 
 --        INNER JOIN ma_hcpcs 
 --        ON ma_inpatientclaims.hcpcs_cd_1 = ma_hcpcs.hcpcs;
-
-*/
 
 
 -- Inpatient Claims
@@ -1108,6 +1125,68 @@ FROM ma_hcpcs b
 WHERE a.hcpcs_cd = b.hcpcs;
 
 ALTER TABLE ma_carrierclaims_lineitems DROP COLUMN hcpcs_cd;
+
+
+-- --------------------------------------------------------------------------------------------------------------------
+-- Copy Medicare-Analysis Tables as Save Point
+-- --------------------------------------------------------------------------------------------------------------------
+
+DROP TABLE IF EXISTS ma2_bs;
+DROP TABLE IF EXISTS ma2_cc;
+DROP TABLE IF EXISTS ma2_cc_li;
+DROP TABLE IF EXISTS ma2_cc_icd_d;
+DROP TABLE IF EXISTS ma2_county;
+DROP TABLE IF EXISTS ma2_h;
+DROP TABLE IF EXISTS ma2_ic_icd_d;
+DROP TABLE IF EXISTS ma2_ic_icd_p;
+DROP TABLE IF EXISTS ma2_i;
+DROP TABLE IF EXISTS ma2_ic;
+DROP TABLE IF EXISTS ma2_l_p_i_c;
+DROP TABLE IF EXISTS ma2_n;
+DROP TABLE IF EXISTS ma2_oc_h;
+DROP TABLE IF EXISTS ma2_oc_icd_d;
+DROP TABLE IF EXISTS ma2_oc_icd_p;
+DROP TABLE IF EXISTS ma2_oc;
+DROP TABLE IF EXISTS ma2_rde;
+DROP TABLE IF EXISTS ma2_state;
+
+ALTER TABLE ma_beneficiarysummary RENAME TO ma2_bs;
+ALTER TABLE ma_carrierclaims RENAME TO ma2_cc;
+ALTER TABLE ma_carrierclaims_lineitems RENAME TO ma2_cc_li;
+ALTER TABLE ma_cc_icd9_dgns RENAME TO ma2_cc_icd_d;
+ALTER TABLE ma_countycodes RENAME TO ma2_county;
+ALTER TABLE ma_hcpcs RENAME TO ma2_h;
+ALTER TABLE ma_ic_icd9_dgns RENAME TO ma2_ic_icd_d;
+ALTER TABLE ma_ic_icd9_prcdr RENAME TO ma2_ic_icd_p;
+ALTER TABLE ma_icd RENAME TO ma2_i;
+ALTER TABLE ma_inpatientclaims RENAME TO ma2_ic;
+ALTER TABLE ma_line_prcsg_ind_cd RENAME TO ma2_l_p_i_c;
+ALTER TABLE ma_ndc RENAME TO ma2_n;
+ALTER TABLE ma_oc_hcpcs RENAME TO ma2_oc_h;
+ALTER TABLE ma_oc_icd9_dgns RENAME TO ma2_oc_icd_d;
+ALTER TABLE ma_oc_icd9_prcdr RENAME TO ma2_oc_icd_p;
+ALTER TABLE ma_outpatientclaims RENAME TO ma2_oc;
+ALTER TABLE ma_rxdrugevents RENAME TO ma2_rde;
+ALTER TABLE ma_statecodes RENAME TO ma2_state;
+
+CREATE TABLE ma_beneficiarysummary AS TABLE ma2_bs;
+CREATE TABLE ma_carrierclaims AS TABLE ma2_cc;
+CREATE TABLE ma_carrierclaims_lineitems AS TABLE ma2_cc_li;
+CREATE TABLE ma_cc_icd9_dgns AS TABLE ma2_cc_icd_d;
+CREATE TABLE ma_countycodes AS TABLE ma2_county;
+CREATE TABLE ma_hcpcs AS TABLE ma2_h;
+CREATE TABLE ma_ic_icd9_dgns AS TABLE ma2_ic_icd_d;
+CREATE TABLE ma_ic_icd9_prcdr AS TABLE ma2_ic_icd_p;
+CREATE TABLE ma_icd AS TABLE ma2_i;
+CREATE TABLE ma_inpatientclaims AS TABLE ma2_ic;
+CREATE TABLE ma_line_prcsg_ind_cd AS TABLE ma2_l_p_i_c;
+CREATE TABLE ma_ndc AS TABLE ma2_n;
+CREATE TABLE ma_oc_hcpcs AS TABLE ma2_oc_h;
+CREATE TABLE ma_oc_icd9_dgns AS TABLE ma2_oc_icd_d;
+CREATE TABLE ma_oc_icd9_prcdr AS TABLE ma2_oc_icd_p;
+CREATE TABLE ma_outpatientclaims AS TABLE ma2_oc;
+CREATE TABLE ma_rxdrugevents AS TABLE ma2_rde;
+CREATE TABLE ma_statecodes AS TABLE ma2_state;
 
 
 -- --------------------------------------------------------------------------------------------------------------------

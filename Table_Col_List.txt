@@ -1,0 +1,334 @@
+
+________________________________________________________________________
+    TABLE LIST
+________________________________________________________________________
+
+desynpuf_beneficiarysummary2008
+desynpuf_beneficiarysummary2009
+desynpuf_beneficiarysummary2010
+desynpuf_carrierclaims
+desynpuf_inpatientclaims
+desynpuf_outpatientclaims
+desynpuf_rxdrugevents
+
+county_codes
+hcpcs
+icd9
+ndc_combined
+
+ma1_bs
+ma1_cc
+ma1_h
+ma1_i
+ma1_ic
+ma1_n
+ma1_oc
+ma1_rde
+
+ma2_bs
+ma2_cc
+ma2_cc_icd_d
+ma2_cc_li
+ma2_county
+ma2_h
+ma2_i
+ma2_ic
+ma2_ic_icd_d
+ma2_ic_icd_p
+ma2_l_p_i_c
+ma2_n
+ma2_oc
+ma2_oc_h
+ma2_oc_icd_d
+ma2_oc_icd_p
+ma2_rde
+ma2_state
+
+ma_beneficiarysummary
+ma_carrierclaims
+ma_carrierclaims_lineitems
+ma_cc_icd9_dgns
+ma_countycodes
+ma_hcpcs
+ma_ic_icd9_dgns
+ma_ic_icd9_prcdr
+ma_icd
+ma_inpatientclaims
+ma_line_prcsg_ind_cd
+ma_ndc
+ma_oc_hcpcs
+ma_oc_icd9_dgns
+ma_oc_icd9_prcdr
+ma_outpatientclaims
+ma_rxdrugevents
+ma_statecodes
+
+________________________________________________________________________
+    ma_beneficiarysummary
+________________________________________________________________________
+
+bene_birth_dt              	date
+bene_county_cd            	smallint
+bene_death_dt              	date
+bene_esrd_ind              	boolean
+bene_hi_cvrage_tot_mons 	smallint
+bene_hmo_cvrage_tot_mons	smallint
+bene_race_cd            	smallint
+bene_sex_ident_cd       	smallint
+bene_smi_cvrage_tot_mons	smallint
+benres_car              	integer
+benres_ip               	integer
+benres_op               	integer
+bs_id                   	integer
+bs_year                 	smallint
+medreimb_car            	integer
+medreimb_ip             	integer
+medreimb_op             	integer
+patient_id              	integer
+plan_cvrg_mos_num          	smallint
+pppymt_car              	integer
+pppymt_ip               	integer
+pppymt_op               	integer
+sp_alzhdmta             	boolean
+sp_chf                  	boolean
+sp_chrnkidn             	boolean
+sp_cncr                 	boolean
+sp_copd                 	boolean
+sp_depressn             	boolean
+sp_diabetes             	boolean
+sp_ischmcht             	boolean
+sp_osteoprs             	boolean
+sp_ra_oa                	boolean
+sp_state_code           	smallint
+sp_strketia             	boolean
+
+Rows:               343,644
+Distinct Patients:  116,352
+
+________________________________________________________________________
+    ma_carrierclaims
+________________________________________________________________________
+
+bs_id       	integer
+clm_from_dt 	date
+clm_id      	bigint
+clm_thru_dt 	date
+patient_id  	integer
+
+Rows:               4,741,335
+
+________________________________________________________________________
+    ma_carrierclaims_lineitems
+________________________________________________________________________
+
+alowd_chrg_amt      	integer
+bene_prmry_pyr_pd_amt	integer
+bene_ptb_ddctbl_amt 	integer
+clm_id              	bigint
+coinsrnc_amt        	integer
+hcpcs_id            	integer
+icd_dgns_id         	integer
+line                	smallint
+nch_pmt_amt         	integer
+prcsg_ind_cd        	character varying
+prf_physn_npi       	bigint
+tax_num             	bigint
+
+Rows:               9,389,003
+
+Number of line items per claim:
+
+                    1   2651812
+                    2   1046896
+                    3   459839
+                    4   229504
+                    5   129798
+                    6   102672
+                    7   40270
+                    8   25618
+                    9   16165
+                    10  11977
+                    11  6716
+                    12  6005
+                    13  14063
+
+________________________________________________________________________
+    ma_cc_icd9_dgns
+________________________________________________________________________
+
+clm_id	    bigint
+icd9_id	    integer
+
+Rows:               10,122,005
+
+________________________________________________________________________
+    ma_countycodes
+________________________________________________________________________
+
+county	            character varying
+ssa_county_code	    character varying
+state	            character varying
+
+Rows:               3,288
+
+________________________________________________________________________
+    ma_hcpcs
+________________________________________________________________________
+
+description	    character varying
+hcpcs	        character varying
+hcpcs_id	    integer
+matched	        boolean
+
+Rows:               8,991
+
+________________________________________________________________________
+    ma_ic_icd9_dgns
+________________________________________________________________________
+
+clm_id	    bigint
+icd9_id	    integer
+
+Rows:               537,271
+
+________________________________________________________________________
+    ma_ic_icd9_prcdr
+________________________________________________________________________
+
+clm_id	    bigint
+icd9_id	    integer
+
+Rows:               95,871
+
+________________________________________________________________________
+    ma_icd
+________________________________________________________________________
+
+description	    character varying
+icd9	        character varying
+icd_id	        integer
+matched	        boolean
+
+Rows:               14,284
+
+________________________________________________________________________
+    ma_inpatientclaims
+________________________________________________________________________
+
+admtng_icd_dgns_id	            integer
+at_physn_npi	                bigint
+bs_id	                        integer
+clm_admsn_dt	                date
+clm_drg_cd	                    character varying
+clm_from_dt	                    date
+clm_id	                        bigint
+clm_pass_thru_per_diem_amt	    integer
+clm_pmt_amt	                    integer
+clm_thru_dt	                    date
+clm_utlztn_day_cnt	            smallint
+nch_bene_blood_ddctbl_lblty_am	integer
+nch_bene_dschrg_dt	            date
+nch_bene_ip_ddctbl_amt	        integer
+nch_bene_pta_coinsrnc_lblty_am	integer
+nch_prmry_pyr_clm_pd_amt	    integer
+op_physn_npi	                bigint
+ot_physn_npi	                bigint
+patient_id	                    integer
+prvdr_num	                    character
+
+Rows:               66,773
+
+________________________________________________________________________
+    ma_line_prcsg_ind_cd
+________________________________________________________________________
+
+code	        character varying
+description	    character varying
+
+Rows:               47
+
+________________________________________________________________________
+    ma_ndc
+________________________________________________________________________
+
+desc_long	character varying
+matched	    boolean
+ndc11	    character varying
+ndc11_id	integer
+
+Rows:               268,563
+
+________________________________________________________________________
+    ma_oc_hcpcs
+________________________________________________________________________
+
+clm_id	    bigint
+hcpcs_id	integer
+
+Rows:               3,774,339
+
+________________________________________________________________________
+    ma_oc_icd9_dgns
+________________________________________________________________________
+
+clm_id	    bigint
+icd9_id	    integer
+
+Rows:               2,073,796
+
+________________________________________________________________________
+    ma_oc_icd9_prcdr
+________________________________________________________________________
+
+clm_id	    bigint
+icd9_id	    integer
+
+Rows:               508
+
+________________________________________________________________________
+    ma_outpatientclaims
+________________________________________________________________________
+
+admtng_icd_dgns_id	            integer
+at_physn_npi	                bigint
+bs_id	                        integer
+clm_from_dt	                    date
+clm_id	                        bigint
+clm_pmt_amt	                    integer
+clm_thru_dt	                    date
+nch_bene_blood_ddctbl_lblty_am	integer
+nch_bene_ptb_coinsrnc_amt	    integer
+nch_bene_ptb_ddctbl_amt	        integer
+nch_prmry_pyr_clm_pd_amt	    integer
+op_physn_npi	                bigint
+ot_physn_npi	                bigint
+patient_id	                    integer
+prvdr_num	                    character
+
+Rows:               790,790
+
+________________________________________________________________________
+    ma_rxdrugevents
+________________________________________________________________________
+
+bs_id	            integer
+days_suply_num	    smallint
+ndc11_id	        integer
+patient_id	        integer
+pde_id	            bigint
+ptnt_pay_amt	    integer
+qty_dspnsd_num	    numeric
+srvc_dt	            date
+tot_rx_cst_amt	    integer
+
+Rows:               5,552,421
+
+________________________________________________________________________
+    ma_statecodes
+________________________________________________________________________
+
+abbreviation	character varying
+state	        character varying
+state_code	    smallint
+
+Rows:               52
