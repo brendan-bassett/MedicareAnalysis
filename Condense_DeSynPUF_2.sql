@@ -12,7 +12,6 @@
 -----------------------------------------------------------------------------------------------------------------------
 */
 
-/*
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Recover Medicare Analysis Tables from save point at end of Condense_DeSynPUF_1.sql
@@ -804,7 +803,6 @@ SET clm_id = new_col_id;
 ALTER TABLE ma_outpatientclaims_seg2
 DROP COLUMN new_col_id;
 
-*/
 
 UPDATE ma_outpatientclaims_segmerged
 SET clm_id = new_col_id;
@@ -1987,5 +1985,3 @@ CREATE TABLE ma_statecodes AS TABLE ma2_state;
 -- --------------------------------------------------------------------------------------------------------------------
 
 VACUUM FULL ANALYZE;
-
-*/

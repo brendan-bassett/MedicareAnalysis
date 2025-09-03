@@ -1,7 +1,10 @@
 
 ________________________________________________________________________
+------------------------------------------------------------------------
     TABLE LIST
-________________________________________________________________________
+------------------------------------------------------------------------
+
+    (saved de-Syn_PUF dataset after prelimnary formatting)
 
 desynpuf_beneficiarysummary2008
 desynpuf_beneficiarysummary2009
@@ -11,10 +14,14 @@ desynpuf_inpatientclaims
 desynpuf_outpatientclaims
 desynpuf_rxdrugevents
 
+    (Other saved datasets after ETL and other work)
+
 county_codes
 hcpcs
 icd9
 ndc_combined
+
+    (Important tables saved after Condense_DeSynPUF_1.sql)
 
 ma1_bs
 ma1_cc
@@ -24,6 +31,8 @@ ma1_ic
 ma1_n
 ma1_oc
 ma1_rde
+
+    (Important tables saved after Condense_DeSynPUF_2.sql)
 
 ma2_bs
 ma2_cc
@@ -43,6 +52,8 @@ ma2_oc_icd_d
 ma2_oc_icd_p
 ma2_rde
 ma2_state
+
+    (Final Medicare-Analysis dataset)
 
 ma_beneficiarysummary
 ma_carrierclaims
@@ -64,9 +75,13 @@ ma_rxdrugevents
 ma_statecodes
 
 ________________________________________________________________________
-    ma_beneficiarysummary
-________________________________________________________________________
+------------------------------------------------------------------------
+    MEDICARE ANALYSIS - TABLE INFO
+------------------------------------------------------------------------
 
+
+    ma_beneficiarysummary
+-------------------------------------
 bene_birth_dt              	date
 bene_county_cd            	smallint
 bene_death_dt              	date
@@ -105,10 +120,9 @@ sp_strketia             	boolean
 Rows:               343,644
 Distinct Patients:  116,352
 
-________________________________________________________________________
-    ma_carrierclaims
-________________________________________________________________________
 
+    ma_carrierclaims
+-------------------------------------
 bs_id       	integer
 clm_from_dt 	date
 clm_id      	bigint
@@ -117,10 +131,9 @@ patient_id  	integer
 
 Rows:               4,741,335
 
-________________________________________________________________________
-    ma_carrierclaims_lineitems
-________________________________________________________________________
 
+    ma_carrierclaims_lineitems
+-------------------------------------
 alowd_chrg_amt      	integer
 bene_prmry_pyr_pd_amt	integer
 bene_ptb_ddctbl_amt 	integer
@@ -152,29 +165,26 @@ Number of line items per claim:
                     12  6005
                     13  14063
 
-________________________________________________________________________
-    ma_cc_icd9_dgns
-________________________________________________________________________
 
+    ma_cc_icd9_dgns
+------------------------------------
 clm_id	    bigint
 icd9_id	    integer
 
 Rows:               10,122,005
 
-________________________________________________________________________
-    ma_countycodes
-________________________________________________________________________
 
+    ma_countycodes
+------------------------------------
 county	            character varying
 ssa_county_code	    character varying
 state	            character varying
 
 Rows:               3,288
 
-________________________________________________________________________
-    ma_hcpcs
-________________________________________________________________________
 
+    ma_hcpcs
+-------------------------------------
 description	    character varying
 hcpcs	        character varying
 hcpcs_id	    integer
@@ -182,28 +192,25 @@ matched	        boolean
 
 Rows:               8,991
 
-________________________________________________________________________
-    ma_ic_icd9_dgns
-________________________________________________________________________
 
+    ma_ic_icd9_dgns
+-------------------------------------
 clm_id	    bigint
 icd9_id	    integer
 
 Rows:               537,271
 
-________________________________________________________________________
-    ma_ic_icd9_prcdr
-________________________________________________________________________
 
+    ma_ic_icd9_prcdr
+-------------------------------------
 clm_id	    bigint
 icd9_id	    integer
 
 Rows:               95,871
 
-________________________________________________________________________
-    ma_icd
-________________________________________________________________________
 
+    ma_icd
+-------------------------------------
 description	    character varying
 icd9	        character varying
 icd_id	        integer
@@ -211,10 +218,9 @@ matched	        boolean
 
 Rows:               14,284
 
-________________________________________________________________________
-    ma_inpatientclaims
-________________________________________________________________________
 
+    ma_inpatientclaims
+-------------------------------------
 admtng_icd_dgns_id	            integer
 at_physn_npi	                bigint
 bs_id	                        integer
@@ -238,19 +244,17 @@ prvdr_num	                    character
 
 Rows:               66,773
 
-________________________________________________________________________
-    ma_line_prcsg_ind_cd
-________________________________________________________________________
 
+    ma_line_prcsg_ind_cd
+-------------------------------------
 code	        character varying
 description	    character varying
 
 Rows:               47
 
-________________________________________________________________________
-    ma_ndc
-________________________________________________________________________
 
+    ma_ndc
+-------------------------------------
 desc_long	character varying
 matched	    boolean
 ndc11	    character varying
@@ -258,37 +262,32 @@ ndc11_id	integer
 
 Rows:               268,563
 
-________________________________________________________________________
-    ma_oc_hcpcs
-________________________________________________________________________
 
+    ma_oc_hcpcs
+-------------------------------------
 clm_id	    bigint
 hcpcs_id	integer
 
 Rows:               3,774,339
 
-________________________________________________________________________
-    ma_oc_icd9_dgns
-________________________________________________________________________
 
+    ma_oc_icd9_dgns
+-------------------------------------
 clm_id	    bigint
 icd9_id	    integer
 
 Rows:               2,073,796
 
-________________________________________________________________________
-    ma_oc_icd9_prcdr
-________________________________________________________________________
 
+    ma_oc_icd9_prcdr
+-------------------------------------
 clm_id	    bigint
 icd9_id	    integer
 
 Rows:               508
 
-________________________________________________________________________
     ma_outpatientclaims
-________________________________________________________________________
-
+-------------------------------------
 admtng_icd_dgns_id	            integer
 at_physn_npi	                bigint
 bs_id	                        integer
@@ -307,10 +306,9 @@ prvdr_num	                    character
 
 Rows:               790,790
 
-________________________________________________________________________
-    ma_rxdrugevents
-________________________________________________________________________
 
+    ma_rxdrugevents
+-------------------------------------
 bs_id	            integer
 days_suply_num	    smallint
 ndc11_id	        integer
@@ -323,10 +321,9 @@ tot_rx_cst_amt	    integer
 
 Rows:               5,552,421
 
-________________________________________________________________________
-    ma_statecodes
-________________________________________________________________________
 
+    ma_statecodes
+-------------------------------------
 abbreviation	character varying
 state	        character varying
 state_code	    smallint
