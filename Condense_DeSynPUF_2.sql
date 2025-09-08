@@ -41,9 +41,6 @@ CREATE TABLE ma_outpatientclaims AS TABLE ma1_oc;
 DROP TABLE IF EXISTS ma_rxdrugevents;
 CREATE TABLE ma_rxdrugevents AS TABLE ma1_rde;
 
-*/
-
-/*
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Merge the two-segment claims within Inpatient Claims

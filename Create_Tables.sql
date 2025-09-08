@@ -488,6 +488,7 @@ CREATE TABLE outpatient_claims (
 --   Create Prescription Drug Events Table
 -- --------------------------------------------------------------------------------------------------------------------
 
+DROP TABLE IF EXISTS rx_drug_events;
 CREATE TABLE rx_drug_events (
 	
 	desynpuf_id VARCHAR(16), 

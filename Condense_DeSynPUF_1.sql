@@ -340,15 +340,16 @@ DROP TABLE ma_beneficiarysummary2010;
 DROP TABLE IF EXISTS ma_ndc;
 CREATE TABLE ma_ndc (
     ndc11 VARCHAR UNIQUE,
-    desc_long VARCHAR
+    matched BOOLEAN,
+    desc_long VARCHAR,
+    desc_short VARCHAR
 );
 
-INSERT INTO ma_ndc (ndc11, matched, desc_long)
-SELECT ndc11, False, NULL 
+INSERT INTO ma_ndc (ndc11, matched, desc_long, desc_short)
+SELECT ndc11, False, NULL , NULL
 FROM ma_rxdrugevents rde
 WHERE NOT rde.ndc11 IS NULL
 ON CONFLICT DO NOTHING;
-
 
 SELECT COUNT(*) FROM ma_ndc;
 
@@ -358,15 +359,22 @@ SELECT COUNT(*) FROM ma_ndc;
 
 UPDATE ma_ndc a
 SET matched = TRUE,
-    desc_long = c.desc_long
+    desc_long = c.desc_long,
+    desc_short = c.desc_short
 FROM ndc_combined c
 WHERE a.ndc11 = c.ndc11;
+
+--  Include "unidentified" descriptions for the codes that are not identified in the NDC table
+
+UPDATE ma_ndc a
+SET desc_long = ndc11 || ' - unidentified',
+    desc_short = ndc11 || ' - unidentified'
+WHERE a.matched = FALSE;
 
 
 SELECT matched, COUNT(*) 
     FROM ma_ndc 
     GROUP BY matched;
-
 
 --      RESULTS:
 --            False	105478
@@ -376,7 +384,7 @@ SELECT matched, COUNT(*)
 
 
 --      Create a unique ID number for each NDC code in the de-Syn-PUF dataset
---      This allows us to refer to NDC codes using 4-byte integers instead of 12-byte varchars
+--      This will allow us to refer to NDC codes using 4-byte integers instead of 12-byte varchars
 
 ALTER TABLE ma_ndc ADD COLUMN ndc11_id SERIAL PRIMARY KEY;
 

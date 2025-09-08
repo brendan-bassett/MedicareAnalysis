@@ -279,6 +279,18 @@ UPDATE ndc2008
 SET desc_long = tradename || ' - ' || packsize
 WHERE strength IS NULL OR unit IS NULL;
 
+--  Add shortened descriptions.
+
+ALTER TABLE ndc2008 ADD COLUMN desc_short VARCHAR;
+
+UPDATE ndc2008
+SET desc_short = tradename
+WHERE LENGTH(tradename) <= 29;
+
+UPDATE ndc2008
+SET desc_short = SUBSTRING(tradename, 1, 29) || '...'
+WHERE LENGTH(tradename) > 29;
+
 
 --  ndc2010
 -- --------------------------------------------------------------------------------------------------------------------
@@ -365,6 +377,18 @@ UPDATE ndc2010
 SET desc_long = tradename || ' - ' || packsize
 WHERE strength IS NULL OR unit IS NULL;
 
+--  Add shortened descriptions.
+
+ALTER TABLE ndc2010 ADD COLUMN desc_short VARCHAR;
+
+UPDATE ndc2010
+SET desc_short = tradename
+WHERE LENGTH(tradename) <= 29;
+
+UPDATE ndc2010
+SET desc_short = SUBSTRING(tradename, 1, 29) || '...'
+WHERE LENGTH(tradename) > 29;
+
 
 --  ndc2012
 -- --------------------------------------------------------------------------------------------------------------------
@@ -449,6 +473,18 @@ WHERE packsize IS NULL;
 UPDATE ndc2012
 SET desc_long = tradename || ' - ' || packsize
 WHERE strength IS NULL OR unit IS NULL;
+
+--  Add shortened descriptions.
+
+ALTER TABLE ndc2012 ADD COLUMN desc_short VARCHAR;
+
+UPDATE ndc2012
+SET desc_short = tradename
+WHERE LENGTH(tradename) <= 29;
+
+UPDATE ndc2012
+SET desc_short = SUBSTRING(tradename, 1, 29) || '...'
+WHERE LENGTH(tradename) > 29;
 
 
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -609,44 +645,53 @@ FROM ndc2025_product b
 WHERE a.ndc8_prod = b.product_ndc;
 
 
+--  Add shortened descriptions.
+
+ALTER TABLE ndc2018 ADD COLUMN desc_short VARCHAR;
+
+UPDATE ndc2018 a
+SET desc_short = b.proprietary_name
+FROM ndc2018_product b
+WHERE a.ndc8_prod = b.product_ndc
+    AND LENGTH(b.proprietary_name) <= 29;
+
+UPDATE ndc2018 a
+SET desc_short = SUBSTRING(b.proprietary_name, 1, 29) || '...'
+FROM ndc2018_product b
+WHERE a.ndc8_prod = b.product_ndc
+    AND LENGTH(b.proprietary_name) > 29;
+
+
+ALTER TABLE ndc2025 ADD COLUMN desc_short VARCHAR;
+
+UPDATE ndc2025 a
+SET desc_short = b.proprietary_name
+FROM ndc2025_product b
+WHERE a.ndc8_prod = b.product_ndc
+    AND LENGTH(b.proprietary_name) <= 29;
+
+UPDATE ndc2025 a
+SET desc_short = SUBSTRING(b.proprietary_name, 1, 29) || '...'
+FROM ndc2025_product b
+WHERE a.ndc8_prod = b.product_ndc
+    AND LENGTH(b.proprietary_name) > 29;
+
+
+--  Get rid of the NDC tables used for importing data
 -- --------------------------------------------------------------------------------------------------------------------
---  Combine all the NDC code & description tables into one combined table
--- --------------------------------------------------------------------------------------------------------------------
 
-DROP TABLE IF EXISTS ndc_combined;
-CREATE TABLE ndc_combined (
-    ndc11 VARCHAR UNIQUE,
-    desc_long VARCHAR
-);
-
-
-INSERT INTO ndc_combined 
-SELECT ndc11, desc_long
-    FROM ndc2008
-ON CONFLICT DO NOTHING;
-
-INSERT INTO ndc_combined 
-SELECT ndc11, desc_long
-    FROM ndc2010
-ON CONFLICT DO NOTHING;
-
-INSERT INTO ndc_combined 
-SELECT ndc11, desc_long
-    FROM ndc2012
-ON CONFLICT DO NOTHING;
-
-INSERT INTO ndc_combined 
-SELECT ndc11, desc_long
-    FROM ndc2018
-ON CONFLICT DO NOTHING;
-
-INSERT INTO ndc_combined 
-SELECT ndc11, desc_long
-    FROM ndc2025
-ON CONFLICT DO NOTHING;
-
-
-SELECT COUNT(*) FROM ndc_combined;
-
---      RESULT: 596106      unique NDCs with descriptions 
-
+DROP TABLE IF EXISTS ndc2008;
+DROP TABLE IF EXISTS ndc2008_listings;
+DROP TABLE IF EXISTS ndc2008_packages;
+DROP TABLE IF EXISTS ndc2010;
+DROP TABLE IF EXISTS ndc2010_listings;
+DROP TABLE IF EXISTS ndc2010_packages;
+DROP TABLE IF EXISTS ndc2012;
+DROP TABLE IF EXISTS ndc2012_listings;
+DROP TABLE IF EXISTS ndc2012_packages;
+DROP TABLE IF EXISTS ndc2018;
+DROP TABLE IF EXISTS ndc2018_package;
+DROP TABLE IF EXISTS ndc2018_product;
+DROP TABLE IF EXISTS ndc2025;
+DROP TABLE IF EXISTS ndc2025_package;
+DROP TABLE IF EXISTS ndc2025_product;
