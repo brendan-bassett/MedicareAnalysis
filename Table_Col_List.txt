@@ -185,7 +185,8 @@ Rows:               3,288
 
     ma_hcpcs
 -------------------------------------
-description	    character varying
+desc_long	    character varying
+desc_short	    character varying
 hcpcs	        character varying
 hcpcs_id	    integer
 matched	        boolean
@@ -211,7 +212,8 @@ Rows:               95,871
 
     ma_icd
 -------------------------------------
-description	    character varying
+desc_long	    character varying
+desc_short	    character varying
 icd9	        character varying
 icd_id	        integer
 matched	        boolean
@@ -255,7 +257,8 @@ Rows:               47
 
     ma_ndc
 -------------------------------------
-desc_long	character varying
+desc_long	    character varying
+desc_short	    character varying
 matched	    boolean
 ndc11	    character varying
 ndc11_id	integer
