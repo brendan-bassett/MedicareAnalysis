@@ -555,6 +555,24 @@ SELECT matched, COUNT(*)
 
 ALTER TABLE ma_icd ADD COLUMN icd_id SERIAL PRIMARY KEY;
 
+--  Add short descriptions
+
+ALTER TABLE ma_icd RENAME COLUMN description TO desc_long;
+ALTER TABLE ma_icd ADD COLUMN desc_short VARCHAR;
+
+UPDATE ma_icd
+SET desc_short = desc_long
+WHERE length(desc_long) <= 29;
+
+UPDATE ma_icd
+SET desc_short = SUBSTRING(desc_long, 1, 29) || '...'
+WHERE length(desc_long) > 29;
+
+UPDATE ma_icd
+SET desc_short = icd9 || ' - unidentified',
+    desc_long = icd9 || ' - unidentified'
+WHERE matched = False;
+
 
 -- ------------------------------------------------------------------------------------------------------------------
 -- Identify every unique HCPCS code present in the deSynPUF dataset
@@ -803,6 +821,28 @@ SELECT matched, COUNT(*)
 --      This allows us to refer to HCPCS codes using 4-byte integers instead of 6-byte varchars
 
 ALTER TABLE ma_hcpcs ADD COLUMN hcpcs_id SERIAL PRIMARY KEY;
+
+--  Add short descriptions
+
+ALTER TABLE ma_hcpcs RENAME COLUMN description TO desc_long;
+ALTER TABLE ma_hcpcs ADD COLUMN desc_short VARCHAR;
+
+UPDATE ma_hcpcs a
+SET desc_short = b.desc_short
+FROM hcpcs b
+WHERE a.hcpcs = b.hcpcs
+    AND length(b.desc_short) <= 29;
+
+UPDATE ma_hcpcs a
+SET desc_short = SUBSTRING(b.desc_short, 1, 29) || '...'
+FROM hcpcs b
+WHERE a.hcpcs = b.hcpcs
+    AND length(b.desc_short) > 29;
+
+UPDATE ma_hcpcs
+SET desc_short = hcpcs || ' - unidentified',
+    desc_long = hcpcs || ' - unidentified'
+WHERE matched = False;
 
 
 -- --------------------------------------------------------------------------------------------------------------------
