@@ -78,8 +78,30 @@ CREATE TABLE ma_rxdrugevents AS TABLE desynpuf_rxdrugevents;
 -- Clean Up State & County Code Tables
 -- --------------------------------------------------------------------------------------------------------------------
 
+-- Separate the SSA state & county codes
+
+ALTER TABLE county_codes RENAME COLUMN ssa_county_code TO ssa_statecounty;
+ALTER TABLE county_codes ADD COLUMN ssa_county VARCHAR;
+ALTER TABLE county_codes ADD COLUMN ssa_state VARCHAR;
+
+UPDATE county_codes
+SET ssa_state = SUBSTRING(ssa_statecounty, 1, 2);
+
+UPDATE county_codes
+SET ssa_county = SUBSTRING(ssa_statecounty, 3);
+
+
+-- There are 48 codes with 'xxx' for ssa_county, representing 'Under-11' category. 
+--  These are not present in the De-SynPUF dataset. Delete them.
+
+DELETE FROM county_codes 
+WHERE ssa_county LIKE '%x%';
+
+-- Create a smaller Medicare-Analysis table with only the information needed for Power BI
+
 ALTER TABLE state_codes RENAME TO ma_statecodes;
 
+DROP TABLE IF EXISTS ma_countycodes;
 CREATE TABLE ma_countycodes AS TABLE county_codes;
 
 ALTER TABLE ma_countycodes DROP COLUMN eligibles;
@@ -89,6 +111,16 @@ ALTER TABLE ma_countycodes DROP COLUMN part_ab_aged;
 ALTER TABLE ma_countycodes DROP COLUMN part_b_aged;
 ALTER TABLE ma_countycodes DROP COLUMN penetration;
 
+-- Merge state & county codes into a single 5-digit standard state-county SSA code in beneficiary summary.
+
+ALTER TABLE ma_beneficiarysummary ADD COLUMN ssa_statecounty CHAR(5);
+
+UPDATE ma_beneficiarysummary
+SET ssa_statecounty = LPAD(sp_state_code::CHAR, 2, '0')
+                        || LPAD(bene_county_cd::CHAR, 3, '0');
+
+
+SELECT sp_state_code, bene_county_cd, ssa_statecounty FROM ma_beneficiarysummary LIMIT 500;
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Create Table for Line Processing Indicator Code (used in carrier claims)

@@ -1,3 +1,0 @@
-
-
-VACUUM FULL ANALYZE;
