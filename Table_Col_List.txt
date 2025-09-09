@@ -4,6 +4,27 @@ ________________________________________________________________________
     TABLE LIST
 ------------------------------------------------------------------------
 
+    (Final Medicare-Analysis dataset)
+
+ma_beneficiarysummary
+ma_carrierclaims
+ma_carrierclaims_lineitems
+ma_cc_icd9_dgns
+ma_countycodes
+ma_hcpcs
+ma_ic_icd9_dgns
+ma_ic_icd9_prcdr
+ma_icd
+ma_inpatientclaims
+ma_line_prcsg_ind_cd
+ma_ndc
+ma_oc_hcpcs
+ma_oc_icd9_dgns
+ma_oc_icd9_prcdr
+ma_outpatientclaims
+ma_rxdrugevents
+ma_statecodes
+
     (saved de-Syn_PUF dataset after prelimnary formatting)
 
 desynpuf_beneficiarysummary2008
@@ -53,26 +74,6 @@ ma2_oc_icd_p
 ma2_rde
 ma2_state
 
-    (Final Medicare-Analysis dataset)
-
-ma_beneficiarysummary
-ma_carrierclaims
-ma_carrierclaims_lineitems
-ma_cc_icd9_dgns
-ma_countycodes
-ma_hcpcs
-ma_ic_icd9_dgns
-ma_ic_icd9_prcdr
-ma_icd
-ma_inpatientclaims
-ma_line_prcsg_ind_cd
-ma_ndc
-ma_oc_hcpcs
-ma_oc_icd9_dgns
-ma_oc_icd9_prcdr
-ma_outpatientclaims
-ma_rxdrugevents
-ma_statecodes
 
 ________________________________________________________________________
 ------------------------------------------------------------------------
