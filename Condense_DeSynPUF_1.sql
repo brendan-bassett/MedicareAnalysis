@@ -428,7 +428,7 @@ ALTER TABLE ma_ndc ADD COLUMN ndc11_id SERIAL PRIMARY KEY;
 
 DROP TABLE IF EXISTS ma_icd;
 CREATE TABLE ma_icd (
-    icd9 VARCHAR UNIQUE,
+    icd VARCHAR UNIQUE,
     description VARCHAR
 );
 
@@ -567,8 +567,8 @@ SELECT COUNT(*) FROM ma_icd;
 UPDATE ma_icd a
 SET matched = TRUE,
     description = i.description
-FROM icd9 i
-WHERE a.icd9 = i.code;
+FROM icd i
+WHERE a.icd = i.code;
 
 
 SELECT matched, COUNT(*) 
@@ -601,8 +601,8 @@ SET desc_short = SUBSTRING(desc_long, 1, 29) || '...'
 WHERE length(desc_long) > 29;
 
 UPDATE ma_icd
-SET desc_short = icd9 || ' - unidentified',
-    desc_long = icd9 || ' - unidentified'
+SET desc_short = icd || ' - unidentified',
+    desc_long = icd || ' - unidentified'
 WHERE matched = False;
 
 
