@@ -1,0 +1,93 @@
+{
+  "datasets": [
+    {
+      "name": "7dcf6675",
+      "displayName": "cc_icd_diabetes",
+      "queryLines": [
+        "SELECT * FROM medicare_analysis.`medicare-analysis`.cc_icd_diabetes"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "cbfd0202",
+      "displayName": "Untitled page",
+      "layout": [
+        {
+          "widget": {
+            "name": "e9e35ecf",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "7dcf6675",
+                  "fields": [
+                    {
+                      "name": "desc_long",
+                      "expression": "`desc_long`"
+                    },
+                    {
+                      "name": "icd",
+                      "expression": "`icd`"
+                    },
+                    {
+                      "name": "sum(icd_count)",
+                      "expression": "SUM(`icd_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "icd",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "y-reversed"
+                    }
+                  },
+                  "displayName": "icd"
+                },
+                "y": {
+                  "fieldName": "sum(icd_count)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Sum of icd_count"
+                },
+                "extra": [
+                  {
+                    "fieldName": "desc_long",
+                    "displayName": "desc_long"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "20 Most Common Diagnoses For Patients with DIabetes",
+                "showTitle": true,
+                "showDescription": false
+              }
+            }
+          },
+          "position": {
+            "x": 1,
+            "y": 0,
+            "width": 4,
+            "height": 8
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    }
+  }
+}
