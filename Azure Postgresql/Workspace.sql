@@ -1,63 +1,88 @@
+--  Merge the state coordinates into the state codes table.
 
--- List the 20 most common ICD diagnosis codes used in carrier claims for patients with diabetes.
+ALTER TABLE ma_statecodes ADD COLUMN latitude REAL;
+ALTER TABLE ma_statecodes ADD COLUMN longitude REAL;
 
---      We have to create a table for this data so the descriptions can be shown with the icd9 
---          codes without creating issues with the 'group by' statement.
+--  Delete the duplicate entries from state_coordinates that will make it impossible to merge.
 
-DROP TABLE IF EXISTS cc_icd_diabetes;
-CREATE TABLE cc_icd_diabetes (
-    icd_count BIGINT,
-    icd9 VARCHAR,
-    desc_long VARCHAR
-);
+DELETE FROM state_coordinates 
+WHERE state_coordinates.state_territory = 'PR'
+    AND latitude = -66.10572;
 
-INSERT INTO cc_icd_diabetes (icd9, icd_count)
-SELECT i.icd9, COUNT(i.icd9) as icd_count
-FROM ma_beneficiarysummary b 
-    INNER JOIN ma_carrierclaims c 
-        ON b.bs_id = c.bs_id
-    INNER JOIN ma_cc_icd9_dgns d
-        ON c.clm_id = d.clm_id
-    INNER JOIN ma_icd i
-        ON d.icd9_id = i.icd_id
-WHERE b.sp_diabetes = True
-GROUP BY i.icd9
-ORDER BY icd_count DESC
-LIMIT 20;
+DELETE FROM state_coordinates 
+WHERE state_coordinates.state_territory = 'DC'
+    AND latitude = 38.942142;
 
-UPDATE cc_icd_diabetes c
-SET desc_long = i.desc_long
-FROM ma_icd i
-WHERE c.icd9 = i.icd9;
+MERGE INTO ma_statecodes
+USING state_coordinates
+ON ma_statecodes.abbreviation = state_coordinates.state_territory
+WHEN MATCHED THEN
+  UPDATE SET ma_statecodes.latitude = state_coordinates.latitude,
+             ma_statecodes.longitude = state_coordinates.longitude;
 
-SELECT * FROM cc_icd_diabetes ORDER BY icd_count DESC;
+SELECT * FROM ma_statecodes
+WHERE latitude IS NULL;
 
-DROP TABLE IF EXISTS cc_icd_diabetes;
+DROP TABLE IF EXISTS state_coordinates;
 
-/*
-        RESULT:
 
-icd_count   icd9    desc_long
+-- ---------------------------------------------------------------------------------------------------------------------------
 
-212969	4019	Unspecified essential hypertension
-180226	4011	Benign hypertension
-125372	25000	Diabetes mellitus without mention of complication, type II or unspecified type, not stated as uncontrolled
-116808	2724	Other and unspecified hyperlipidemia
-69138	2720	Pure hypercholesterolemia
-58206	42731	Atrial fibrillation
-49053	2449	Unspecified acquired hypothyroidism
-49009	V5869	V5869 - unidentified
-48031	78079	Other malaise and fatigue
-47403	2859	Anemia, unspecified
-43342	4280	Congestive heart failure, unspecified
-43144	7295	Pain in limb
-40710	496	Chronic airway obstruction, not elsewhere classified
-40038	2722	Mixed hyperlipidemia
-37739	41400	Coronary atherosclerosis of unspecified type of vessel, native or graft
-37148	78650	Chest pain, unspecified
-34132	41401	Coronary atherosclerosis of native coronary artery
-33736	7242	Lumbago
-31157	V5861	V5861 - unidentified
-30476	5990	Urinary tract infection, site not specified
+--  Merge the FIPS Codes into the SSA county codes table.
 
-*/
+ALTER TABLE ma_countycodes ADD COLUMN fips_statecounty INT;
+ALTER TABLE ma_countycodes ADD COLUMN latitude DOUBLE;
+ALTER TABLE ma_countycodes ADD COLUMN longitude DOUBLE;
+
+--  Make sure there are no duplicate entries in the crosswalk table or the ssa county codes table.
+
+-- SELECT COUNT(ssacounty), ssacounty FROM county_ssa_fips_crosswalk GROUP BY ssacounty HAVING COUNT(ssacounty) > 1; 
+-- SELECT COUNT(fipscounty), fipscounty FROM county_ssa_fips_crosswalk GROUP BY fipscounty HAVING COUNT(fipscounty) > 1; 
+-- SELECT COUNT(ssa_statecounty), ssa_statecounty FROM ma_countycodes GROUP BY ssa_statecounty HAVING COUNT(ssa_statecounty) > 1; 
+
+MERGE INTO ma_countycodes AS cc
+USING county_ssa_fips_crosswalk AS sfc
+ON cc.ssa_statecounty = sfc.ssacounty
+WHEN MATCHED THEN
+  UPDATE SET cc.fips_statecounty = sfc.fipscounty;
+
+-- Assess the codes that did not have a match in the crosswalk.
+
+-- SELECT * FROM ma_countycodes
+-- WHERE fips_statecounty IS NULL;
+
+-- Most of these are from Alaska. Are there similar codes in the crosswalk?
+
+-- SELECT * FROM county_ssa_fips_crosswalk
+-- WHERE ssastate = 2;
+
+-- All of the Alaska codes are the same from SSA to FIPS so we can copy the codes over for that state.
+
+UPDATE ma_countycodes
+SET fips_statecounty = ssa_statecounty
+WHERE fips_statecounty IS NULL
+    AND ssa_state = 2;
+
+DROP TABLE IF EXISTS county_ssa_fips_crosswalk;
+
+-- Merge in the latitude & longitude for each county.
+
+MERGE INTO ma_countycodes AS cc
+USING county_coordinates_fips AS ccf
+ON cc.fips_statecounty = ccf.cfips
+WHEN MATCHED THEN
+  UPDATE SET cc.latitude = ccf.lat,
+             cc.longitude = ccf.lng;
+
+-- Assess the codes that did not have a latitude & longitude.
+
+-- SELECT * FROM ma_countycodes
+-- WHERE latitude IS NULL;
+
+-- It's not very many rows. We'll just ignore them for now.
+
+DROP TABLE IF EXISTS county_coordinates_fips;
+
+
+
+     
