@@ -794,6 +794,7 @@ CREATE TABLE county_ssa_fips_crosswalk (
 	county VARCHAR, 
 	state VARCHAR, 
 	ssacounty VARCHAR, 
+	fipscounty VARCHAR, 
 	cbsa VARCHAR, 
 	cbsaname VARCHAR, 
 	ssastate VARCHAR, 
