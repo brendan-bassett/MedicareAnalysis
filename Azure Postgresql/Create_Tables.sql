@@ -792,7 +792,7 @@ DROP TABLE IF EXISTS county_ssa_fips_crosswalk;
 CREATE TABLE county_ssa_fips_crosswalk (
 	
 	county VARCHAR, 
-	state VARCHAR, 
+	state_abbr VARCHAR, 
 	ssacounty VARCHAR, 
 	fipscounty VARCHAR, 
 	cbsa VARCHAR, 
