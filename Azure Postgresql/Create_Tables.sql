@@ -743,22 +743,23 @@ CREATE TABLE cms_rvu_2010 (
 
 /*
 -----------------------------------------------------------------------------------------------------------------------
-   Create State & County Codes Table
+   Create State & County Codes Tables
 -----------------------------------------------------------------------------------------------------------------------
 */
 
+DROP TABLE IF EXISTS state_codes;
 CREATE TABLE state_codes (
 	
 	state_code SMALLINT, 
-	abbreviation VARCHAR(2),
-	state VARCHAR
+	state_abbr VARCHAR(2),
+	state_name VARCHAR
 );
 	
-
+DROP TABLE IF EXISTS county_codes;
 CREATE TABLE county_codes (
 	
-	state VARCHAR(2), 
-	county VARCHAR, 
+	state_abbr VARCHAR(2), 
+	county_name VARCHAR, 
 	eligibles INT,
 	enrollees INT,
 	penetration NUMERIC(8, 2),
@@ -766,5 +767,37 @@ CREATE TABLE county_codes (
 	part_b_aged NUMERIC(8, 2), 
 	part_ab_aged NUMERIC(8, 2),
     ssa_county_code VARCHAR(5)
+);
+
+DROP TABLE IF EXISTS state_coordinates;
+CREATE TABLE state_coordinates (
+	
+	state_territory VARCHAR, 
+	latitude REAL,
+	longitude REAL,
+	state_name VARCHAR
+);
+	
+DROP TABLE IF EXISTS county_coordinates_fips;
+CREATE TABLE county_coordinates_fips (
+	
+	cfips VARCHAR, 
+	county_name VARCHAR,
+	longitude REAL,
+	latitude REAL
+);
+	
+
+DROP TABLE IF EXISTS county_ssa_fips_crosswalk;
+CREATE TABLE county_ssa_fips_crosswalk (
+	
+	county_name VARCHAR, 
+	state_abbr VARCHAR, 
+	ssacounty VARCHAR, 
+	fipscounty VARCHAR, 
+	cbsa VARCHAR, 
+	cbsaname VARCHAR, 
+	ssastate VARCHAR, 
+	fipsstate VARCHAR
 );
 	
