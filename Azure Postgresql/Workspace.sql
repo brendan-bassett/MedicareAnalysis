@@ -1,6 +1,7 @@
 --  Merge the state coordinates into the state codes table.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 ALTER TABLE ma_statecodes ADD COLUMN latitude REAL;
 ALTER TABLE ma_statecodes ADD COLUMN longitude REAL;
@@ -89,3 +90,5 @@ DROP TABLE IF EXISTS county_coordinates_fips;
 
      
 >>>>>>> dd459553f990aca3f719341794ff3de5b8044cf3
+=======
+>>>>>>> dev
