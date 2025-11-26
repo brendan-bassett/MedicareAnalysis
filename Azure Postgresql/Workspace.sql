@@ -1,88 +1,111 @@
---  Merge the state coordinates into the state codes table.
 
-ALTER TABLE ma_statecodes ADD COLUMN latitude REAL;
-ALTER TABLE ma_statecodes ADD COLUMN longitude REAL;
+/*
 
---  Delete the duplicate entries from state_coordinates that will make it impossible to merge.
+-- --------------------------------------------------------------------------------------------------------------------
+--  Count the number of patients in each state & county
+-- --------------------------------------------------------------------------------------------------------------------
 
-DELETE FROM state_coordinates 
-WHERE state_coordinates.state_territory = 'PR'
-    AND latitude = -66.10572;
-
-DELETE FROM state_coordinates 
-WHERE state_coordinates.state_territory = 'DC'
-    AND latitude = 38.942142;
-
-MERGE INTO ma_statecodes
-USING state_coordinates
-ON ma_statecodes.abbreviation = state_coordinates.state_territory
-WHEN MATCHED THEN
-  UPDATE SET ma_statecodes.latitude = state_coordinates.latitude,
-             ma_statecodes.longitude = state_coordinates.longitude;
-
-SELECT * FROM ma_statecodes
-WHERE latitude IS NULL;
-
-DROP TABLE IF EXISTS state_coordinates;
+DROP TABLE IF EXISTS patients_by_state;
+CREATE TABLE patients_by_state (
+  pt_count INT,
+  state_name VARCHAR, 
+  ssa_state SMALLINT,
+  latitude REAL,
+  longitude REAL
+);
 
 
--- ---------------------------------------------------------------------------------------------------------------------------
-
---  Merge the FIPS Codes into the SSA county codes table.
-
-ALTER TABLE ma_countycodes ADD COLUMN fips_statecounty INT;
-ALTER TABLE ma_countycodes ADD COLUMN latitude DOUBLE;
-ALTER TABLE ma_countycodes ADD COLUMN longitude DOUBLE;
-
---  Make sure there are no duplicate entries in the crosswalk table or the ssa county codes table.
-
--- SELECT COUNT(ssacounty), ssacounty FROM county_ssa_fips_crosswalk GROUP BY ssacounty HAVING COUNT(ssacounty) > 1; 
--- SELECT COUNT(fipscounty), fipscounty FROM county_ssa_fips_crosswalk GROUP BY fipscounty HAVING COUNT(fipscounty) > 1; 
--- SELECT COUNT(ssa_statecounty), ssa_statecounty FROM ma_countycodes GROUP BY ssa_statecounty HAVING COUNT(ssa_statecounty) > 1; 
-
-MERGE INTO ma_countycodes AS cc
-USING county_ssa_fips_crosswalk AS sfc
-ON cc.ssa_statecounty = sfc.ssacounty
-WHEN MATCHED THEN
-  UPDATE SET cc.fips_statecounty = sfc.fipscounty;
-
--- Assess the codes that did not have a match in the crosswalk.
-
--- SELECT * FROM ma_countycodes
--- WHERE fips_statecounty IS NULL;
-
--- Most of these are from Alaska. Are there similar codes in the crosswalk?
-
--- SELECT * FROM county_ssa_fips_crosswalk
--- WHERE ssastate = 2;
-
--- All of the Alaska codes are the same from SSA to FIPS so we can copy the codes over for that state.
-
-UPDATE ma_countycodes
-SET fips_statecounty = ssa_statecounty
-WHERE fips_statecounty IS NULL
-    AND ssa_state = 2;
-
-DROP TABLE IF EXISTS county_ssa_fips_crosswalk;
-
--- Merge in the latitude & longitude for each county.
-
-MERGE INTO ma_countycodes AS cc
-USING county_coordinates_fips AS ccf
-ON cc.fips_statecounty = ccf.cfips
-WHEN MATCHED THEN
-  UPDATE SET cc.latitude = ccf.lat,
-             cc.longitude = ccf.lng;
-
--- Assess the codes that did not have a latitude & longitude.
-
--- SELECT * FROM ma_countycodes
--- WHERE latitude IS NULL;
-
--- It's not very many rows. We'll just ignore them for now.
-
-DROP TABLE IF EXISTS county_coordinates_fips;
+INSERT INTO patients_by_state
+SELECT COUNT(DISTINCT patient_id) AS pt_count, 
+        s.state, s.state_code, s.latitude, s.longitude
+FROM ma_beneficiarysummary AS bs
+INNER JOIN ma_statecodes AS s
+ON bs.ssa_state = s.ssa_state
+GROUP BY s.state, s.ssa_state, s.latitude, s.longitude
+ORDER BY pt_count DESC;
 
 
+-- ----------------------------------------------------------
 
-     
+-- Ensure that the majority of the county codes in ma_beneficiarysummaries are also in the ma_countycodes table.
+
+SELECT COUNT(DISTINCT ssa_statecounty) FROM ma_beneficiarysummary;
+
+--      RESULT: 3088
+
+SELECT COUNT(DISTINCT ma_beneficiarysummary.ssa_statecounty) FROM ma_beneficiarysummary
+LEFT JOIN ma_countycodes 
+ON ma_beneficiarysummary.ssa_statecounty = ma_countycodes.ssa_statecounty
+WHERE ma_countycodes.ssa_statecounty IS NOT NULL;
+
+--      RESULT: 2996
+
+--  Most county codes in the ma_beneficiarysummary table are also in the ma_countycodes table.
+
+
+DROP TABLE IF EXISTS patients_by_counties;
+CREATE TABLE patients_by_counties (
+  pt_count INT,
+  county STRING, 
+  state STRING, 
+  latitude DOUBLE,
+  longitude DOUBLE
+);
+
+INSERT INTO patients_by_counties
+SELECT COUNT(DISTINCT patient_id) AS pt_count, c.county, c.state, c.latitude, c.longitude
+FROM ma_beneficiarysummary AS bs
+INNER JOIN ma_countycodes AS c
+ON bs.ssa_statecounty = c.ssa_statecounty
+GROUP BY c.county, c.state, c.latitude, c.longitude
+ORDER BY pt_count DESC;
+
+-- --------------------------------------------------------------------------------------------------------------------
+--  Incorporate Data for Chronic Conditions
+-- --------------------------------------------------------------------------------------------------------------------
+
+ALTER TABLE patients_by_state ADD COLUMN ct_alzhdmta INT;
+ALTER TABLE patients_by_state ADD COLUMN ct_chrnkidn INT;
+ALTER TABLE patients_by_state ADD COLUMN ct_cncr INT;
+ALTER TABLE patients_by_state ADD COLUMN ct_copd INT;
+ALTER TABLE patients_by_state ADD COLUMN ct_depressn INT;
+ALTER TABLE patients_by_state ADD COLUMN ct_diabetes INT;
+ALTER TABLE patients_by_state ADD COLUMN ct_ischmcht INT;
+ALTER TABLE patients_by_state ADD COLUMN ct_osteoprs INT;
+ALTER TABLE patients_by_state ADD COLUMN ct_ra_oa INT;
+ALTER TABLE patients_by_state ADD COLUMN ct_strketia INT;
+
+ALTER TABLE patients_by_state ADD COLUMN per_alzhdmta DECIMAL(10, 2);
+ALTER TABLE patients_by_state ADD COLUMN per_chrnkidn DECIMAL(10, 2);
+ALTER TABLE patients_by_state ADD COLUMN per_cncr DECIMAL(10, 2);
+ALTER TABLE patients_by_state ADD COLUMN per_copd DECIMAL(10, 2);
+ALTER TABLE patients_by_state ADD COLUMN per_depressn DECIMAL(10, 2);
+ALTER TABLE patients_by_state ADD COLUMN per_diabetes DECIMAL(10, 2);
+ALTER TABLE patients_by_state ADD COLUMN per_ischmcht DECIMAL(10, 2);
+ALTER TABLE patients_by_state ADD COLUMN per_osteoprs DECIMAL(10, 2);
+ALTER TABLE patients_by_state ADD COLUMN per_ra_oa DECIMAL(10, 2);
+ALTER TABLE patients_by_state ADD COLUMN per_strketia DECIMAL(10, 2);
+
+MERGE INTO patients_by_state AS pbs
+USING
+  (SELECT COUNT(DISTINCT patient_id) AS pt_count, 
+        s.state_code
+  FROM ma_beneficiarysummary AS bs
+  INNER JOIN ma_statecodes AS s
+  ON bs.ssa_state = s.state_code
+  WHERE bs.sp_alzhdmta IS TRUE
+  GROUP BY s.state_code)
+  AS source
+ON source.state_code = pbs.ssa_state
+WHEN MATCHED THEN UPDATE SET
+    ct_alzhdmta = source.pt_count;
+
+UPDATE patients_by_state
+SET per_alzhdmta = ct_alzhdmta::FLOAT / pt_count * 100;
+
+SELECT state, pt_count, ct_alzhdmta, per_alzhdmta
+FROM patients_by_state
+ORDER BY per_alzhdmta DESC;
+
+*/
+
