@@ -1,7 +1,11 @@
 
+
 -- --------------------------------------------------------------------------------------------------------------------
 --  Merge the SSA state codes used in the deSynPUF dataset with their latitude and longitude coordinates.
 -- --------------------------------------------------------------------------------------------------------------------
+
+ALTER TABLE state_codes ADD COLUMN latitude REAL;
+ALTER TABLE state_codes ADD COLUMN longitude REAL;
 
 --  Delete the duplicate entries from state_coordinates that will make it impossible to merge.
 
@@ -13,19 +17,19 @@ DELETE FROM state_coordinates
 WHERE state_coordinates.state_territory = 'DC'
     AND latitude > 38.91;
 
-MERGE INTO statecodes AS sc
+MERGE INTO state_codes AS sc
 USING state_coordinates AS coord
-ON sc.abbreviation = coord.state_territory
+ON sc.state_abbr = coord.state_territory
 WHEN MATCHED THEN
     UPDATE SET latitude = coord.latitude,
                 longitude = coord.longitude;
-
 
 -- Update the latitude and longitude of the 'Other' state code to the geographical center of the continental US.
 
 UPDATE state_codes
 SET state_name = 'OTHER', latitude = 39.8283, longitude = -98.5795
-WHERE ssa_state = 54;
+WHERE state_code = 54;
+
 
 -- Double-check that all of the entries in state_codes have lat & long coordinates.
 
@@ -34,8 +38,6 @@ WHERE ssa_state = 54;
 
 
 DROP TABLE IF EXISTS state_coordinates;
-
-/*
 
 
 -- Double-check that the state_codes table includes all SSA codes used in the deSynPUF dataset.
@@ -58,6 +60,8 @@ UPDATE state_codes
 SET ssa_state = CAST(state_code AS SMALLINT);
 
 ALTER TABLE state_codes DROP COLUMN state_code;
+
+-- Rename the ssa state code column in the Medicare Analysis database 
 
 ALTER TABLE ma_beneficiarysummary RENAME COLUMN sp_state_code TO ssa_state;
 
@@ -88,11 +92,10 @@ ALTER TABLE county_codes ADD COLUMN longitude REAL;
 -- SELECT COUNT(statecounty), statecounty FROM county_codes 
 -- GROUP BY statecounty HAVING COUNT(statecounty) > 1; 
 
-
 MERGE INTO county_codes AS cc
 USING county_ssa_fips_crosswalk AS sfc
 ON cc.ssa_county_code = sfc.ssacounty
-WHEN MATCHED THENß
+WHEN MATCHED THEN
     UPDATE SET fips_statecounty = sfc.fipscounty;
 
 
