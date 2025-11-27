@@ -105,18 +105,18 @@ plan_cvrg_mos_num          	smallint
 pppymt_car              	integer
 pppymt_ip               	integer
 pppymt_op               	integer
-sp_alzhdmta             	boolean
-sp_chf                  	boolean
-sp_chrnkidn             	boolean
-sp_cncr                 	boolean
-sp_copd                 	boolean
-sp_depressn             	boolean
-sp_diabetes             	boolean
-sp_ischmcht             	boolean
-sp_osteoprs             	boolean
-sp_ra_oa                	boolean
+sp_alzhdmta             	boolean         (Alzheimer or related)
+sp_chf                  	boolean         (Heart Failure)
+sp_chrnkidn             	boolean         (Chronic Kidney Disease)
+sp_cncr                 	boolean         (Cancer)
+sp_copd                 	boolean         (Chronic Obstructive Pulmonary Disease)
+sp_depressn             	boolean         (Depression)
+sp_diabetes             	boolean         (Diabetes)
+sp_ischmcht             	boolean         (Ischemic Heart Disease)
+sp_osteoprs             	boolean         (Osteoporosis)
+sp_ra_oa                	boolean         (Rheumatoid Arthritis and Osteoarthritis (RA/OA))
 sp_state_code           	smallint
-sp_strketia             	boolean
+sp_strketia             	boolean         (Stroke/transient Ischemic Attack)
 
 Rows:               343,644
 Distinct Patients:  116,352

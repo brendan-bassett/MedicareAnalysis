@@ -751,15 +751,15 @@ DROP TABLE IF EXISTS state_codes;
 CREATE TABLE state_codes (
 	
 	state_code SMALLINT, 
-	abbreviation VARCHAR(2),
-	state VARCHAR
+	state_abbr VARCHAR(2),
+	state_name VARCHAR
 );
 	
 DROP TABLE IF EXISTS county_codes;
 CREATE TABLE county_codes (
 	
-	state VARCHAR(2), 
-	county VARCHAR, 
+	state_abbr VARCHAR(2), 
+	county_name VARCHAR, 
 	eligibles INT,
 	enrollees INT,
 	penetration NUMERIC(8, 2),
@@ -775,14 +775,14 @@ CREATE TABLE state_coordinates (
 	state_territory VARCHAR, 
 	latitude REAL,
 	longitude REAL,
-	name VARCHAR
+	state_name VARCHAR
 );
 	
 DROP TABLE IF EXISTS county_coordinates_fips;
 CREATE TABLE county_coordinates_fips (
 	
 	cfips VARCHAR, 
-	name VARCHAR,
+	county_name VARCHAR,
 	longitude REAL,
 	latitude REAL
 );
@@ -791,9 +791,10 @@ CREATE TABLE county_coordinates_fips (
 DROP TABLE IF EXISTS county_ssa_fips_crosswalk;
 CREATE TABLE county_ssa_fips_crosswalk (
 	
-	county VARCHAR, 
-	state VARCHAR, 
+	county_name VARCHAR, 
+	state_abbr VARCHAR, 
 	ssacounty VARCHAR, 
+	fipscounty VARCHAR, 
 	cbsa VARCHAR, 
 	cbsaname VARCHAR, 
 	ssastate VARCHAR, 
