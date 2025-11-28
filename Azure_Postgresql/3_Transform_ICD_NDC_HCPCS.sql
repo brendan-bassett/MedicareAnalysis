@@ -1,14 +1,16 @@
 /*
 -----------------------------------------------------------------------------------------------------------------------
-	Transform the imported NDC, HCPCS, ICD, and other tables so they are more usable
+	STEP 3
+    
+    Combine the imported NDC, HCPCS, and ICD information into complete tables of each.
 -----------------------------------------------------------------------------------------------------------------------
 */
-
 
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Merge the ICD9 included & excluded tables
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
+DROP TABLE IF EXISTS icd9;
 CREATE TABLE icd9 (
 	
 	code VARCHAR UNIQUE, 
@@ -36,6 +38,7 @@ ON CONFLICT DO NOTHING;
 
 --      Populate a new hcpcs table with the descriptions from hcpcs17
 
+DROP TABLE IF EXISTS hcpcs;
 CREATE TABLE hcpcs (
     hcpcs VARCHAR(5) UNIQUE,
     desc_short VARCHAR,
@@ -599,22 +602,15 @@ DROP COLUMN seg_2;
 ALTER TABLE ndc2025_package
 DROP COLUMN seg_3;
 
+
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 -- 	Assemble the 2025 and 2018 descriptions tables
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ALTER TABLE ndc2018_package RENAME COLUMN product_ndc TO ndc8_prod;
-ALTER TABLE ndc2025_package RENAME COLUMN product_ndc TO ndc8_prod;
 
 DROP TABLE IF EXISTS ndc2018;
 CREATE TABLE ndc2018 (
-    ndc11 VARCHAR,
-    ndc8_prod VARCHAR,
-    desc_long VARCHAR
-);
-
-DROP TABLE IF EXISTS ndc2025;
-CREATE TABLE ndc2025 (
     ndc11 VARCHAR,
     ndc8_prod VARCHAR,
     desc_long VARCHAR
@@ -625,6 +621,16 @@ SELECT b.ndc11,
         b.ndc8_prod,
         RTRIM(SPLIT_PART(b.package_description, '(', 1))
 FROM ndc2018_package b;
+
+
+ALTER TABLE ndc2025_package RENAME COLUMN product_ndc TO ndc8_prod;
+
+DROP TABLE IF EXISTS ndc2025;
+CREATE TABLE ndc2025 (
+    ndc11 VARCHAR,
+    ndc8_prod VARCHAR,
+    desc_long VARCHAR
+);
 
 INSERT INTO ndc2025
 SELECT b.ndc11,
@@ -677,21 +683,84 @@ WHERE a.ndc8_prod = b.product_ndc
     AND LENGTH(b.proprietary_name) > 29;
 
 
---  Get rid of the NDC tables used for importing data
+-- --------------------------------------------------------------------------------------------------------------------
+--  Combine all of the NDC information into one complete table
 -- --------------------------------------------------------------------------------------------------------------------
 
-DROP TABLE IF EXISTS ndc2008;
+DROP TABLE IF EXISTS ndc_combined;
+CREATE TABLE ndc_combined (
+    ndc11 VARCHAR UNIQUE,
+    desc_short VARCHAR,
+    desc_long VARCHAR
+);
+
+INSERT INTO ndc_combined
+SELECT ndc11, desc_short, desc_long
+FROM ndc2008
+ON CONFLICT (ndc11) DO NOTHING;
+
+INSERT INTO ndc_combined
+SELECT ndc11, desc_short, desc_long
+FROM ndc2010
+ON CONFLICT (ndc11) DO NOTHING;
+
+INSERT INTO ndc_combined
+SELECT ndc11, desc_short, desc_long
+FROM ndc2012
+ON CONFLICT (ndc11) DO NOTHING;
+
+INSERT INTO ndc_combined
+SELECT ndc11, desc_short, desc_long
+FROM ndc2018
+ON CONFLICT (ndc11) DO NOTHING;
+
+INSERT INTO ndc_combined
+SELECT ndc11, desc_short, desc_long
+FROM ndc2025
+ON CONFLICT (ndc11) DO NOTHING;
+
+
+SELECT ndc11, count(*) AS count FROM ndc_combined GROUP BY ndc11 HAVING count(*) > 1;
+
+
+-- --------------------------------------------------------------------------------------------------------------------
+-- Remove Old, Uneccessary Tables
+-- --------------------------------------------------------------------------------------------------------------------
+
 DROP TABLE IF EXISTS ndc2008_listings;
 DROP TABLE IF EXISTS ndc2008_packages;
-DROP TABLE IF EXISTS ndc2010;
 DROP TABLE IF EXISTS ndc2010_listings;
 DROP TABLE IF EXISTS ndc2010_packages;
-DROP TABLE IF EXISTS ndc2012;
 DROP TABLE IF EXISTS ndc2012_listings;
 DROP TABLE IF EXISTS ndc2012_packages;
-DROP TABLE IF EXISTS ndc2018;
+
 DROP TABLE IF EXISTS ndc2018_package;
 DROP TABLE IF EXISTS ndc2018_product;
-DROP TABLE IF EXISTS ndc2025;
 DROP TABLE IF EXISTS ndc2025_package;
 DROP TABLE IF EXISTS ndc2025_product;
+
+DROP TABLE IF EXISTS icd9_excluded;
+DROP TABLE IF EXISTS icd9_included;
+
+DROP TABLE IF EXISTS hcpcs17;
+
+DROP TABLE IF EXISTS cms_rvu_2010;
+
+DROP TABLE IF EXISTS ndc2008;
+DROP TABLE IF EXISTS ndc2010;
+DROP TABLE IF EXISTS ndc2012;
+DROP TABLE IF EXISTS ndc2018;
+DROP TABLE IF EXISTS ndc2025;
+
+
+-- --------------------------------------------------------------------------------------------------------------------
+--  Save the full NDC, ICD, and HCPCS lists as Save Point 3
+-- --------------------------------------------------------------------------------------------------------------------
+
+DROP TABLE IF EXISTS Save3_hcpcs;
+DROP TABLE IF EXISTS Save3_icd9;
+DROP TABLE IF EXISTS Save3_ndc;
+
+CREATE TABLE Save3_hcpcs AS TABLE hcpcs;
+CREATE TABLE Save3_icd9 AS TABLE icd9;
+CREATE TABLE Save3_ndc AS TABLE ndc_combined;

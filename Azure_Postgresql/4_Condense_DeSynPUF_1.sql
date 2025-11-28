@@ -1,6 +1,8 @@
 /*
 -----------------------------------------------------------------------------------------------------------------------
-	Prepare the de-Syn_PUF data for efficient use in Power BI.
+	STEP 4
+    
+    Prepare the de-Syn_PUF data for efficient use in Power BI.
 
     ** PART 1 **
 
@@ -9,53 +11,23 @@
     
     This involves removing extra columns nad merging tables. Also creating lookup tables for codes such as hcpcs that 
     have multiple columns for the same category of data.
+
+
+        Summary:
+            Create Table for Line Processing Indicator Code (used in carrier claims).
+            Add Beneficiary Summary ID and merge Beneficiary Summaries into one table.
+            Collect & Identify the distinct NDC codes that are used in the ma_rxdrugevents table.
+            Identify every unique ICD-9 code present in the deSynPUF dataset.
+            Identify every unique HCPCS code present in the deSynPUF dataset.
+            Convert desynpuf_id to INTEGER.
+
 -----------------------------------------------------------------------------------------------------------------------
 */
 
 /*
-
 -- --------------------------------------------------------------------------------------------------------------------
--- Remove Old, Uneccessary Tables
+--  Load tables from the previous save point.
 -- --------------------------------------------------------------------------------------------------------------------
-
-DROP TABLE IF EXISTS ndc2008_listings;
-DROP TABLE IF EXISTS ndc2008_packages;
-DROP TABLE IF EXISTS ndc2010_listings;
-DROP TABLE IF EXISTS ndc2010_packages;
-DROP TABLE IF EXISTS ndc2012_listings;
-DROP TABLE IF EXISTS ndc2012_packages;
-
-DROP TABLE IF EXISTS ndc2018_package;
-DROP TABLE IF EXISTS ndc2018_product;
-DROP TABLE IF EXISTS ndc2025_package;
-DROP TABLE IF EXISTS ndc2025_product;
-
-DROP TABLE IF EXISTS icd9_excluded;
-DROP TABLE IF EXISTS icd9_included;
-
-DROP TABLE IF EXISTS hcpcs17;
-
-DROP TABLE IF EXISTS cms_rvu_2010;
-
-DROP TABLE IF EXISTS ndc2008;
-DROP TABLE IF EXISTS ndc2010;
-DROP TABLE IF EXISTS ndc2012;
-DROP TABLE IF EXISTS ndc2018;
-DROP TABLE IF EXISTS ndc2025;
-
--- --------------------------------------------------------------------------------------------------------------------
---  Save the original desynpuf tables and create new Medical-Analysis (MA) tables
--- --------------------------------------------------------------------------------------------------------------------
-
-ALTER TABLE beneficiary_summary_2008 RENAME TO desynpuf_beneficiarysummary2008;
-ALTER TABLE beneficiary_summary_2009 RENAME TO desynpuf_beneficiarysummary2009;
-ALTER TABLE beneficiary_summary_2010 RENAME TO desynpuf_beneficiarysummary2010;
-ALTER TABLE carrier_claims RENAME TO desynpuf_carrierclaims;
-ALTER TABLE inpatient_claims RENAME TO desynpuf_inpatientclaims;
-ALTER TABLE outpatient_claims RENAME TO desynpuf_outpatientclaims;
-ALTER TABLE rx_drug_events RENAME TO desynpuf_rxdrugevents;
-
-*/
 
 DROP TABLE IF EXISTS ma_beneficiarysummary2008;
 DROP TABLE IF EXISTS ma_beneficiarysummary2009;
@@ -65,67 +37,29 @@ DROP TABLE IF EXISTS ma_inpatientclaims;
 DROP TABLE IF EXISTS ma_outpatientclaims;
 DROP TABLE IF EXISTS ma_rxdrugevents;
 
-CREATE TABLE ma_beneficiarysummary2008 AS TABLE desynpuf_beneficiarysummary2008;
-CREATE TABLE ma_beneficiarysummary2009 AS TABLE desynpuf_beneficiarysummary2009;
-CREATE TABLE ma_beneficiarysummary2010 AS TABLE desynpuf_beneficiarysummary2010;
-CREATE TABLE ma_carrierclaims AS TABLE desynpuf_carrierclaims;
-CREATE TABLE ma_inpatientclaims AS TABLE desynpuf_inpatientclaims;
-CREATE TABLE ma_outpatientclaims AS TABLE desynpuf_outpatientclaims;
-CREATE TABLE ma_rxdrugevents AS TABLE desynpuf_rxdrugevents;
+DROP TABLE IF EXISTS hcpcs;
+DROP TABLE IF EXISTS icd9;
+DROP TABLE IF EXISTS ndc_combined;
+
+
+CREATE TABLE ma_beneficiarysummary2008 AS TABLE Save2_desynpuf_beneficiarysummary2008;
+CREATE TABLE ma_beneficiarysummary2009 AS TABLE Save2_desynpuf_beneficiarysummary2009;
+CREATE TABLE ma_beneficiarysummary2010 AS TABLE Save2_desynpuf_beneficiarysummary2010;
+CREATE TABLE ma_carrierclaims AS TABLE Save2_desynpuf_carrierclaims;
+CREATE TABLE ma_inpatientclaims AS TABLE Save2_desynpuf_inpatientclaims;
+CREATE TABLE ma_outpatientclaims AS TABLE Save2_desynpuf_outpatientclaims;
+CREATE TABLE ma_rxdrugevents AS TABLE Save2_desynpuf_rxdrugevents;
+
+CREATE TABLE hcpcs AS TABLE Save3_hcpcs;
+CREATE TABLE icd9 AS TABLE Save3_icd9;
+CREATE TABLE ndc_combined AS TABLE Save3_ndc;
 
 
 -- --------------------------------------------------------------------------------------------------------------------
--- Clean Up State & County Code Tables
+-- Create Table for Line Processing Indicator Code (used in carrier claims).
 -- --------------------------------------------------------------------------------------------------------------------
 
--- Separate the SSA state & county codes
-
-ALTER TABLE county_codes RENAME COLUMN ssa_county_code TO ssa_statecounty;
-ALTER TABLE county_codes ADD COLUMN ssa_county VARCHAR;
-ALTER TABLE county_codes ADD COLUMN ssa_state VARCHAR;
-
-UPDATE county_codes
-SET ssa_state = SUBSTRING(ssa_statecounty, 1, 2);
-
-UPDATE county_codes
-SET ssa_county = SUBSTRING(ssa_statecounty, 3);
-
-
--- There are 48 codes with 'xxx' for ssa_county, representing 'Under-11' category. 
---  These are not present in the De-SynPUF dataset. Delete them.
-
-DELETE FROM county_codes 
-WHERE ssa_county LIKE '%x%';
-
--- Create a smaller Medicare-Analysis table with only the information needed for Power BI
-
-ALTER TABLE state_codes RENAME TO ma_statecodes;
-
-DROP TABLE IF EXISTS ma_countycodes;
-CREATE TABLE ma_countycodes AS TABLE county_codes;
-
-ALTER TABLE ma_countycodes DROP COLUMN eligibles;
-ALTER TABLE ma_countycodes DROP COLUMN enrollees;
-ALTER TABLE ma_countycodes DROP COLUMN part_a_aged;
-ALTER TABLE ma_countycodes DROP COLUMN part_ab_aged;
-ALTER TABLE ma_countycodes DROP COLUMN part_b_aged;
-ALTER TABLE ma_countycodes DROP COLUMN penetration;
-
--- Merge state & county codes into a single 5-digit standard state-county SSA code in beneficiary summary.
-
-ALTER TABLE ma_beneficiarysummary ADD COLUMN ssa_statecounty CHAR(5);
-
-UPDATE ma_beneficiarysummary
-SET ssa_statecounty = LPAD(sp_state_code::CHAR, 2, '0')
-                        || LPAD(bene_county_cd::CHAR, 3, '0');
-
-
-SELECT sp_state_code, bene_county_cd, ssa_statecounty FROM ma_beneficiarysummary LIMIT 500;
-
--- --------------------------------------------------------------------------------------------------------------------
--- Create Table for Line Processing Indicator Code (used in carrier claims)
--- --------------------------------------------------------------------------------------------------------------------
-
+DROP TABLE IF EXISTS ma_line_prcsg_ind_cd;
 CREATE TABLE ma_line_prcsg_ind_cd (
     code VARCHAR,
     description VARCHAR
@@ -366,7 +300,7 @@ DROP TABLE ma_beneficiarysummary2010;
 
 
 -- --------------------------------------------------------------------------------------------------------------------
---  Collect & Identify the distinct NDC codes that are used in the ma_rxdrugevents table
+--  Collect & Identify the distinct NDC codes that are used in the ma_rxdrugevents table.
 -- --------------------------------------------------------------------------------------------------------------------
 
 DROP TABLE IF EXISTS ma_ndc;
@@ -422,13 +356,14 @@ ALTER TABLE ma_ndc ADD COLUMN ndc11_id SERIAL PRIMARY KEY;
 
 
 -- ------------------------------------------------------------------------------------------------------------------
--- Identify every unique ICD-9 code present in the deSynPUF dataset
+-- Identify every unique ICD-9 code present in the deSynPUF dataset.
 -- ------------------------------------------------------------------------------------------------------------------
 
 
 DROP TABLE IF EXISTS ma_icd;
 CREATE TABLE ma_icd (
     icd VARCHAR UNIQUE,
+    matched BOOLEAN,
     description VARCHAR
 );
 
@@ -567,7 +502,7 @@ SELECT COUNT(*) FROM ma_icd;
 UPDATE ma_icd a
 SET matched = TRUE,
     description = i.description
-FROM icd i
+FROM icd9 i
 WHERE a.icd = i.code;
 
 
@@ -605,14 +540,17 @@ SET desc_short = icd || ' - unidentified',
     desc_long = icd || ' - unidentified'
 WHERE matched = False;
 
+*/
+
 
 -- ------------------------------------------------------------------------------------------------------------------
--- Identify every unique HCPCS code present in the deSynPUF dataset
+-- Identify every unique HCPCS code present in the deSynPUF dataset.
 -- ------------------------------------------------------------------------------------------------------------------
 
 DROP TABLE IF EXISTS ma_hcpcs;
 CREATE TABLE ma_hcpcs (
     hcpcs VARCHAR UNIQUE,
+    matched BOOLEAN,
     description VARCHAR
 );
 
@@ -878,7 +816,7 @@ WHERE matched = False;
 
 
 -- --------------------------------------------------------------------------------------------------------------------
--- Convert desynpuf_id to INTEGER
+-- Convert desynpuf_id to INTEGER.
 -- --------------------------------------------------------------------------------------------------------------------
 
 
@@ -956,230 +894,35 @@ DROP TABLE IF EXISTS patient_id_conversion;
 
 
 -- --------------------------------------------------------------------------------------------------------------------
--- Truncate numeric columns to INTEGER
+-- Drop the full ICD, HCPCS, and NDC tables. In the future we will use the more efficient MA tables.
 -- --------------------------------------------------------------------------------------------------------------------
 
---      Nearly every dollar-value in the entire dataset does not contain cent-precision information. The data-type 
---      "numeric" uses approximately 12 bytes each for this datset, which is quite unnecessary. We will convert all
---      of these values to 4-byte integers to conserve on storage space. This truncates each value to dollar-precision.
---      The casting of each value from Numeric to Integer uses a large amount of storage and processing time.
+DROP TABLE IF EXISTS hcpcs;
+DROP TABLE IF EXISTS icd9;
+DROP TABLE IF EXISTS ndc_combined;
 
---      ** THIS IS AN EXTREMELY RESOURCE-HEAVY OPERATION **
-
---      Multiple instances of "vacuum" are used to limit the amount of storage used in this operation
---      Then the database is saved so this hopefully does not have to be completed again. This is why the
---      Condense_DeSynPUF sql files are divided into two segments.
-
-
-DROP FUNCTION IF EXISTS cast_col;
-
-CREATE OR REPLACE FUNCTION cast_col (
-   table_name VARCHAR,
-   col_name VARCHAR
-)
-
-RETURNS TABLE ( 
-	c BIGINT
-)
-
-LANGUAGE plpgsql
-
-AS $$
-	
-DECLARE
-
-	col_name_OLD VARCHAR;
-
-
-BEGIN
-
-    col_name_OLD := col_name || '_OLD';
-
-	EXECUTE  format('ALTER TABLE %I RENAME COLUMN %I TO %I;',
-                table_name, col_name, col_name_OLD);
-
-	EXECUTE  format('ALTER TABLE %I ADD COLUMN %I INTEGER;',
-                table_name, col_name);
-
-	EXECUTE  format('UPDATE %I SET %I = CAST(%I AS INTEGER);',
-                table_name, col_name, col_name_OLD);
-
-	EXECUTE  format('ALTER TABLE %I DROP COLUMN %I;',
-                table_name, col_name_OLD);
-
-	RETURN QUERY EXECUTE format('SELECT COUNT(*) FROM %I;', table_name);
-
-END
-$$;
-
-
--- Beneficiary Summary
-
-SELECT cast_col('ma_beneficiarysummary', 'medreimb_ip');
-SELECT cast_col('ma_beneficiarysummary', 'benres_ip');
-SELECT cast_col('ma_beneficiarysummary', 'pppymt_ip');
-SELECT cast_col('ma_beneficiarysummary', 'medreimb_op');
-SELECT cast_col('ma_beneficiarysummary', 'benres_op');
-SELECT cast_col('ma_beneficiarysummary', 'pppymt_op');
-SELECT cast_col('ma_beneficiarysummary', 'medreimb_car');
-SELECT cast_col('ma_beneficiarysummary', 'benres_car');
-SELECT cast_col('ma_beneficiarysummary', 'pppymt_car');
-
-VACUUM FULL ANALYZE;
-
--- Carrier Claims
-
-SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_1');
-SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_2');
-SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_3');
-SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_4');
-SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_5');
-SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_6');
-SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_7');
-
-VACUUM FULL ANALYZE;
-
-SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_8');
-SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_9');
-SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_10');
-SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_11');
-SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_12');
-SELECT cast_col('ma_carrierclaims', 'line_nch_pmt_amt_13');
-
-VACUUM FULL ANALYZE;
-
-SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_1');
-SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_2');
-SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_3');
-SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_4');
-SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_5');
-SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_6');
-SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_7');
-
-VACUUM FULL ANALYZE;
-
-SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_8');
-SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_9');
-SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_10');
-SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_11');
-SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_12');
-SELECT cast_col('ma_carrierclaims', 'line_bene_ptb_ddctbl_amt_13');
-
-VACUUM FULL ANALYZE;
-
-SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_1');
-SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_2');
-SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_3');
-SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_4');
-SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_5');
-SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_6');
-SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_7');
-
-VACUUM FULL ANALYZE;
-
-SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_8');
-SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_9');
-SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_10');
-SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_11');
-SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_12');
-SELECT cast_col('ma_carrierclaims', 'line_bene_prmry_pyr_pd_amt_13');
-
-VACUUM FULL ANALYZE;
-
-SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_1');
-SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_2');
-SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_3');
-SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_4');
-SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_5');
-SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_6');
-SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_7');
-
-VACUUM FULL ANALYZE;
-
-SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_8');
-SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_9');
-SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_10');
-SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_11');
-SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_12');
-SELECT cast_col('ma_carrierclaims', 'line_coinsrnc_amt_13');
-
-VACUUM FULL ANALYZE;
-
-SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_1');
-SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_2');
-SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_3');
-SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_4');
-SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_5');
-SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_6');
-SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_7');
-
-VACUUM FULL ANALYZE;
-
-SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_8');
-SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_9');
-SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_10');
-SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_11');
-SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_12');
-SELECT cast_col('ma_carrierclaims', 'line_alowd_chrg_amt_13');
-
-VACUUM FULL ANALYZE;
-
--- Inpatient Claims
-
-SELECT cast_col('ma_inpatientclaims', 'clm_pmt_amt');
-SELECT cast_col('ma_inpatientclaims', 'nch_prmry_pyr_clm_pd_amt');
-SELECT cast_col('ma_inpatientclaims', 'clm_pass_thru_per_diem_amt');
-SELECT cast_col('ma_inpatientclaims', 'nch_bene_ip_ddctbl_amt');
-SELECT cast_col('ma_inpatientclaims', 'nch_bene_pta_coinsrnc_lblty_am');
-SELECT cast_col('ma_inpatientclaims', 'nch_bene_blood_ddctbl_lblty_am');
-
-VACUUM FULL ANALYZE;
-
--- Outpatient Claims
-
-SELECT cast_col('ma_outpatientclaims', 'clm_pmt_amt');
-SELECT cast_col('ma_outpatientclaims', 'nch_prmry_pyr_clm_pd_amt');
-SELECT cast_col('ma_outpatientclaims', 'nch_bene_blood_ddctbl_lblty_am');
-SELECT cast_col('ma_outpatientclaims', 'nch_bene_ptb_ddctbl_amt');
-SELECT cast_col('ma_outpatientclaims', 'nch_bene_ptb_coinsrnc_amt');
-
--- Rx Drug Events
-
-SELECT cast_col('ma_rxdrugevents', 'ptnt_pay_amt');
-SELECT cast_col('ma_rxdrugevents', 'tot_rx_cst_amt');
-
-VACUUM FULL ANALYZE;
 
 -- --------------------------------------------------------------------------------------------------------------------
--- Copy Medicare-Analysis Tables as Save Point
+-- Copy Medicare-Analysis Tables as Save Point 4
 -- --------------------------------------------------------------------------------------------------------------------
 
-DROP TABLE IF EXISTS ma1_bs;
-DROP TABLE IF EXISTS ma1_cc;
-DROP TABLE IF EXISTS ma1_h;
-DROP TABLE IF EXISTS ma1_i;
-DROP TABLE IF EXISTS ma1_ic;
-DROP TABLE IF EXISTS ma1_n;
-DROP TABLE IF EXISTS ma1_oc;
-DROP TABLE IF EXISTS ma1_rde;
+DROP TABLE IF EXISTS Save4_ma_beneficiarysummary;
+DROP TABLE IF EXISTS Save4_ma_carrierclaims;
+DROP TABLE IF EXISTS Save4_ma_hcpcs;
+DROP TABLE IF EXISTS Save4_ma_icd;
+DROP TABLE IF EXISTS Save4_ma_inpatientclaims;
+DROP TABLE IF EXISTS Save4_ma_ndc;
+DROP TABLE IF EXISTS Save4_ma_outpatientclaims;
+DROP TABLE IF EXISTS Save4_ma_rxdrugevents;
 
-ALTER TABLE ma_beneficiarysummary RENAME TO ma1_bs;
-ALTER TABLE ma_carrierclaims RENAME TO ma1_cc;
-ALTER TABLE ma_hcpcs RENAME TO ma1_h;
-ALTER TABLE ma_icd RENAME TO ma1_i;
-ALTER TABLE ma_inpatientclaims RENAME TO ma1_ic;
-ALTER TABLE ma_ndc RENAME TO ma1_n;
-ALTER TABLE ma_outpatientclaims RENAME TO ma1_oc;
-ALTER TABLE ma_rxdrugevents RENAME TO ma1_rde;
-
-CREATE TABLE ma_beneficiarysummary AS TABLE ma1_bs;
-CREATE TABLE ma_carrierclaims AS TABLE ma1_cc;
-CREATE TABLE ma_hcpcs AS TABLE ma1_h;
-CREATE TABLE ma_icd AS TABLE ma1_i;
-CREATE TABLE ma_inpatientclaims AS TABLE ma1_ic;
-CREATE TABLE ma_ndc AS TABLE ma1_n;
-CREATE TABLE ma_outpatientclaims AS TABLE ma1_oc;
-CREATE TABLE ma_rxdrugevents AS TABLE ma1_rde;
+CREATE TABLE Save4_ma_beneficiarysummary AS TABLE ma_beneficiarysummary;
+CREATE TABLE Save4_ma_carrierclaims AS TABLE ma_carrierclaims;
+CREATE TABLE Save4_ma_hcpcs AS TABLE ma_hcpcs;
+CREATE TABLE Save4_ma_icd AS TABLE ma_icd;
+CREATE TABLE Save4_ma_inpatientclaims AS TABLE ma_inpatientclaims;
+CREATE TABLE Save4_ma_ndc AS TABLE ma_ndc;
+CREATE TABLE Save4_ma_outpatientclaims AS TABLE ma_outpatientclaims;
+CREATE TABLE Save4_ma_rxdrugevents AS TABLE ma_rxdrugevents;
 
 
 VACUUM FULL ANALYZE;

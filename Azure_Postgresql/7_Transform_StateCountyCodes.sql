@@ -1,7 +1,90 @@
 
+/*
+-----------------------------------------------------------------------------------------------------------------------
+    STEP 7
+
+    Standardize SSA state & county codes, correlate with FIPS county codes and incorporate their latitude 
+    & longitude coordinates.
+    
+        Run Time:  1 min with increased compute capacity.
+
+-----------------------------------------------------------------------------------------------------------------------
+*/
+
+/*
+-- --------------------------------------------------------------------------------------------------------------------
+--  Load from the previous save point.
+-- --------------------------------------------------------------------------------------------------------------------
+
+-- Only the ma_beneficiarysummary table needs to be reloaded for this file.
+
+DROP TABLE IF EXISTS ma_beneficiarysummary;
+CREATE TABLE ma_beneficiarysummary AS TABLE Save6_ma_beneficiarysummary;
+
+
+-- All the rest of the MA tables from save 6 below in case a full reload is needed.
+
+DROP TABLE IF EXISTS ma_carrierclaims;
+DROP TABLE IF EXISTS ma_carrierclaims_lineitems;
+DROP TABLE IF EXISTS ma_cc_icd_dgns;
+DROP TABLE IF EXISTS ma_hcpcs;
+DROP TABLE IF EXISTS ma_ic_icd_dgns;
+DROP TABLE IF EXISTS ma_ic_icd_prcdr;
+DROP TABLE IF EXISTS ma_icd;
+DROP TABLE IF EXISTS ma_inpatientclaims;
+DROP TABLE IF EXISTS ma_line_prcsg_ind_cd;
+DROP TABLE IF EXISTS ma_ndc;
+DROP TABLE IF EXISTS ma_oc_hcpcs;
+DROP TABLE IF EXISTS ma_oc_icd_dgns;
+DROP TABLE IF EXISTS ma_oc_icd_prcdr;
+DROP TABLE IF EXISTS ma_outpatientclaims;
+DROP TABLE IF EXISTS ma_rxdrugevents;
+
+CREATE TABLE ma_carrierclaims AS TABLE Save6_ma_carrierclaims;
+CREATE TABLE ma_carrierclaims_lineitems AS TABLE Save6_ma_carrierclaims_lineitems;
+CREATE TABLE ma_cc_icd_dgns AS TABLE Save6_ma_cc_icd_dgns;
+CREATE TABLE ma_hcpcs AS TABLE Save6_ma_hcpcs;
+CREATE TABLE ma_ic_icd_dgns AS TABLE Save6_ma_ic_icd_dgns;
+CREATE TABLE ma_ic_icd_prcdr AS TABLE Save6_ma_ic_icd_prcdr;
+CREATE TABLE ma_icd AS TABLE Save6_ma_icd;
+CREATE TABLE ma_inpatientclaims AS TABLE Save6_ma_inpatientclaims;
+CREATE TABLE ma_line_prcsg_ind_cd AS TABLE Save6_ma_line_prcsg_ind_cd;
+CREATE TABLE ma_ndc AS TABLE Save6_ma_ndc;
+CREATE TABLE ma_oc_hcpcs AS TABLE Save6_ma_oc_hcpcs;
+CREATE TABLE ma_oc_icd_dgns AS TABLE Save6_ma_oc_icd_dgns;
+CREATE TABLE ma_oc_icd_prcdr AS TABLE Save6_ma_oc_icd_prcdr;
+CREATE TABLE ma_outpatientclaims AS TABLE Save6_ma_outpatientclaims;
+CREATE TABLE ma_rxdrugevents AS TABLE Save6_ma_rxdrugevents;
+
+*/
 
 -- --------------------------------------------------------------------------------------------------------------------
---  Merge the SSA state codes used in the deSynPUF dataset with their latitude and longitude coordinates.
+-- Merge state & county codes into a single 5-digit standard state-county SSA code in beneficiary summary.
+-- --------------------------------------------------------------------------------------------------------------------
+
+ALTER TABLE ma_beneficiarysummary RENAME COLUMN sp_state_code TO ssa_state_int;
+ALTER TABLE ma_beneficiarysummary RENAME COLUMN bene_county_cd TO ssa_county_int;
+
+ALTER TABLE ma_beneficiarysummary ADD COLUMN ssa_state CHAR(2);
+ALTER TABLE ma_beneficiarysummary ADD COLUMN ssa_county CHAR(3);
+
+UPDATE ma_beneficiarysummary
+SET ssa_state = LPAD(ssa_state_int::CHAR(2), 2, '0');
+
+UPDATE ma_beneficiarysummary
+SET ssa_county = LPAD(ssa_county_int::CHAR(3), 3, '0');
+
+ALTER TABLE ma_beneficiarysummary ADD COLUMN ssa_statecounty CHAR(5);
+
+UPDATE ma_beneficiarysummary
+SET ssa_statecounty = ssa_state || ssa_county;
+
+ALTER TABLE ma_beneficiarysummary DROP COLUMN ssa_state_int;
+ALTER TABLE ma_beneficiarysummary DROP COLUMN ssa_county_int;
+
+
+-- --------------------------------------------------------------------------------------------------------------------
+-- Merge the SSA state codes used in the deSynPUF dataset with their latitude and longitude coordinates.
 -- --------------------------------------------------------------------------------------------------------------------
 
 ALTER TABLE state_codes ADD COLUMN latitude REAL;
@@ -60,10 +143,6 @@ UPDATE state_codes
 SET ssa_state = CAST(state_code AS SMALLINT);
 
 ALTER TABLE state_codes DROP COLUMN state_code;
-
--- Rename the ssa state code column in the Medicare Analysis database 
-
-ALTER TABLE ma_beneficiarysummary RENAME COLUMN sp_state_code TO ssa_state;
 
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -137,17 +216,128 @@ MERGE INTO county_codes AS cc
 
 -- It's not very many rows. We'll just ignore them for now.
 
-
 DROP TABLE IF EXISTS county_coordinates_fips;
 
 
--- Save the county and state codes tables as part of the Medicare Analysis dataset
+-- Separate the SSA state & county codes
+
+ALTER TABLE county_codes RENAME COLUMN ssa_county_code TO ssa_statecounty;
+ALTER TABLE county_codes ADD COLUMN ssa_county VARCHAR;
+ALTER TABLE county_codes ADD COLUMN ssa_state VARCHAR;
+
+UPDATE county_codes
+SET ssa_state = SUBSTRING(ssa_statecounty, 1, 2);
+
+UPDATE county_codes
+SET ssa_county = SUBSTRING(ssa_statecounty, 3);
+
+
+--  Deterine how many ssa_statecounty codes are part of the 'OTHER' designated state 
+--    and not defined in ma_countycodes.
+
+SELECT COUNT(*) AS count
+FROM ma_beneficiarysummary bs
+LEFT JOIN ma_countycodes cc
+ON bs.ssa_statecounty = cc.ssa_statecounty
+WHERE cc.ssa_statecounty IS NULL
+  AND bs.ssa_state = '54'
+
+--    RESULT:  4817
+
+--  Incorporate the missing ssa_statecounty codes using default information.
+
+INSERT INTO ma_countycodes
+SELECT 'OT',              -- state_abbr
+      'OTHER',            -- county_name
+      bs.ssa_statecounty, -- ssa_statecounty
+      bs.ssa_statecounty, -- fips_statecounty   (make same as SSA statecounty)
+      39.8283,            -- latitude   (latitude of geographical center of continental US)
+      -98.5795,           -- longitude  (longitude of geographical center of continental US)
+      bs.ssa_county,      -- ssa_county
+      bs.ssa_state        -- ssa_state
+FROM ma_beneficiarysummary bs
+LEFT JOIN ma_countycodes cc
+ON bs.ssa_statecounty = cc.ssa_statecounty
+WHERE cc.ssa_statecounty IS NULL
+  AND bs.ssa_state = '54'
+GROUP BY bs.ssa_statecounty, bs.ssa_state, bs.ssa_county
+ORDER BY bs.ssa_statecounty;
+
+--  Deterine how many ssa_statecounty codes are NOT part of the 'OTHER' designated state 
+--    and not defined in ma_countycodes.
+
+SELECT COUNT(*) AS count
+FROM ma_beneficiarysummary bs
+LEFT JOIN ma_countycodes cc
+ON bs.ssa_statecounty = cc.ssa_statecounty
+WHERE cc.ssa_statecounty IS NULL
+  AND bs.ssa_state <> '54'
+  
+--    RESULT:  92
+
+--  This isnt enough entries to be consequential, considering there are 116,352 distinct patients in the dataset.
+--  Incorporate the missing ssa_statecounty codes using similar default information.
+
+INSERT INTO ma_countycodes
+SELECT '--',              -- state_abbr
+      'UNKNOWN',          -- county_name
+      bs.ssa_statecounty, -- ssa_statecounty
+      bs.ssa_statecounty, -- fips_statecounty   (make same as SSA statecounty)
+      39.8283,            -- latitude   (latitude of geographical center of continental US)
+      -98.5795,           -- longitude  (longitude of geographical center of continental US)
+      bs.ssa_county,      -- ssa_county
+      bs.ssa_state        -- ssa_state
+FROM ma_beneficiarysummary bs
+LEFT JOIN ma_countycodes cc
+ON bs.ssa_statecounty = cc.ssa_statecounty
+WHERE cc.ssa_statecounty IS NULL
+  AND bs.ssa_state <> '54'
+GROUP BY bs.ssa_statecounty, bs.ssa_state, bs.ssa_county
+ORDER BY bs.ssa_statecounty;
+
+--  Replace the state_abbr so it is appropriate for the ssa_state code.
+
+UPDATE ma_countycodes cc
+SET state_abbr = sc.state_abbr
+FROM ma_statecodes sc
+WHERE cc.ssa_state = CAST(sc.ssa_state AS CHAR(2))
+  AND cc.state_abbr = '--'
+
+
+-- There are 48 codes with 'xxx' for ssa_county, representing 'Under-11' category. 
+--  These are not present in the De-SynPUF dataset. Delete them.
+
+DELETE FROM county_codes 
+WHERE ssa_county LIKE '%x%';
+
+
+-- Drop the columns that are not relevant for this project.
+
+ALTER TABLE county_codes DROP COLUMN eligibles;
+ALTER TABLE county_codes DROP COLUMN enrollees;
+ALTER TABLE county_codes DROP COLUMN part_a_aged;
+ALTER TABLE county_codes DROP COLUMN part_ab_aged;
+ALTER TABLE county_codes DROP COLUMN part_b_aged;
+ALTER TABLE county_codes DROP COLUMN penetration;
+
+
+-- --------------------------------------------------------------------------------------------------------------------
+--  Save the county and state codes tables as part of the Medicare Analysis dataset
+-- --------------------------------------------------------------------------------------------------------------------
 
 DROP TABLE IF EXISTS ma_statecodes;
-CREATE TABLE ma_statecodes AS TABLE state_codes;
-DROP TABLE IF EXISTS state_codes;
+ALTER TABLE state_codes RENAME TO ma_statecodes;
 
 DROP TABLE IF EXISTS ma_countycodes;
-CREATE TABLE ma_countycodes AS TABLE county_codes;
-DROP TABLE IF EXISTS county_codes;
+ALTER TABLE county_codes RENAME TO ma_countycodes;
+
+-- --------------------------------------------------------------------------------------------------------------------
+--  Copy State & County Code Tables as Save Point 7
+-- --------------------------------------------------------------------------------------------------------------------
+
+DROP TABLE IF EXISTS Save7_ma_statecodes;
+DROP TABLE IF EXISTS Save7_ma_countycodes;
+
+CREATE TABLE Save7_ma_statecodes AS TABLE ma_statecodes;
+CREATE TABLE Save7_ma_countycodes AS TABLE ma_countycodes;
 

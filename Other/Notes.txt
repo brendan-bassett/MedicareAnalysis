@@ -22,6 +22,10 @@
 	Create file:
 
 		touch <file_name>
+
+	"Stash" the most recent local changes for later. Helps with merging local and origin changes:
+
+		git stash
 		
 	Rename/Move file within git repository:
 

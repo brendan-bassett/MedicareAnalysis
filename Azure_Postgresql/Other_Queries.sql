@@ -1,6 +1,7 @@
+
 /*
 -----------------------------------------------------------------------------------------------------------------------
-	A collection of various queries that were used to asses the data as it was in the process of preparation.
+	A collection of additional queries that were used to asses the data as it was in the process of preparation.
 -----------------------------------------------------------------------------------------------------------------------
 */
 

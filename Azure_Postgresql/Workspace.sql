@@ -109,8 +109,3 @@ ORDER BY per_alzhdmta DESC;
 
 */
 
-
-SELECT column_name, data_type
-FROM information_schema.columns
-WHERE table_schema = 'public' AND table_name = 'state_codes'
-ORDER BY column_name;

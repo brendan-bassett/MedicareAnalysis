@@ -1,6 +1,8 @@
 /*
 -----------------------------------------------------------------------------------------------------------------------
-	Prepare the de-Syn_PUF data for efficient use in Power BI.
+	STEP 6
+    
+    Prepare the de-Syn_PUF data for efficient use in Power BI.
 
     ** PART 2 **
 
@@ -9,41 +11,47 @@
     
     This involves removing extra columns nad merging tables. Also creating lookup tables for codes such as hcpcs that 
     have multiple columns for the same category of data.
+
+        Summary:
+            Merge the two-segment claims within Inpatient Claims.
+            Merge the two-segment claims within Outpatient Claims.
+            Separate single claim line items from Carrier Claims.
+            Correlate NDC codes to Rx Drug Events using an NDC index id.
+            Correlate ICD codes to each Medicare Analysis table using an ICD index id.
+            Correlate HCPCS codes to each Medicare Analysis table using an HCPCS index id.
+
+        Run Time:  18 min with increased compute capacity.
+
 -----------------------------------------------------------------------------------------------------------------------
 */
 
-
+/*
 -- --------------------------------------------------------------------------------------------------------------------
--- Recover Medicare Analysis Tables from save point at end of Condense_DeSynPUF_1.sql
+--  Load from the previous save point.
 -- --------------------------------------------------------------------------------------------------------------------
 
 DROP TABLE IF EXISTS ma_beneficiarysummary;
-CREATE TABLE ma_beneficiarysummary AS TABLE ma1_bs;
-
 DROP TABLE IF EXISTS ma_carrierclaims;
-CREATE TABLE ma_carrierclaims AS TABLE ma1_cc;
-
 DROP TABLE IF EXISTS ma_hcpcs;
-CREATE TABLE ma_hcpcs AS TABLE ma1_h;
-
 DROP TABLE IF EXISTS ma_icd;
-CREATE TABLE ma_icd AS TABLE ma1_i;
-
 DROP TABLE IF EXISTS ma_inpatientclaims;
-CREATE TABLE ma_inpatientclaims AS TABLE ma1_ic;
-
 DROP TABLE IF EXISTS ma_ndc;
-CREATE TABLE ma_ndc AS TABLE ma1_n;
-
 DROP TABLE IF EXISTS ma_outpatientclaims;
-CREATE TABLE ma_outpatientclaims AS TABLE ma1_oc;
-
 DROP TABLE IF EXISTS ma_rxdrugevents;
-CREATE TABLE ma_rxdrugevents AS TABLE ma1_rde;
 
+CREATE TABLE ma_beneficiarysummary AS TABLE Save5_ma_beneficiarysummary;
+CREATE TABLE ma_carrierclaims AS TABLE Save5_ma_carrierclaims;
+CREATE TABLE ma_hcpcs AS TABLE Save5_ma_hcpcs;
+CREATE TABLE ma_icd AS TABLE Save5_ma_icd;
+CREATE TABLE ma_inpatientclaims AS TABLE Save5_ma_inpatientclaims;
+CREATE TABLE ma_ndc AS TABLE Save5_ma_ndc;
+CREATE TABLE ma_outpatientclaims AS TABLE Save5_ma_outpatientclaims;
+CREATE TABLE ma_rxdrugevents AS TABLE Save5_ma_rxdrugevents;
+
+*/
 
 -- --------------------------------------------------------------------------------------------------------------------
--- Merge the two-segment claims within Inpatient Claims
+-- Merge the two-segment claims within Inpatient Claims.
 -- --------------------------------------------------------------------------------------------------------------------
 
 --      Fill a secondary table with both segments from each two-segment inpatient claim
@@ -150,52 +158,6 @@ $$;
 
 SELECT merge_code('admtng_icd9_dgns_cd');
 
-SELECT merge_code('hcpcs_cd_1');
-SELECT merge_code('hcpcs_cd_2');
-SELECT merge_code('hcpcs_cd_3');
-SELECT merge_code('hcpcs_cd_4');
-SELECT merge_code('hcpcs_cd_5');
-SELECT merge_code('hcpcs_cd_6');
-SELECT merge_code('hcpcs_cd_7');
-SELECT merge_code('hcpcs_cd_8');
-SELECT merge_code('hcpcs_cd_9');
-SELECT merge_code('hcpcs_cd_10');
-SELECT merge_code('hcpcs_cd_11');
-SELECT merge_code('hcpcs_cd_12');
-SELECT merge_code('hcpcs_cd_13');
-SELECT merge_code('hcpcs_cd_14');
-SELECT merge_code('hcpcs_cd_15');
-SELECT merge_code('hcpcs_cd_16');
-SELECT merge_code('hcpcs_cd_17');
-SELECT merge_code('hcpcs_cd_18');
-SELECT merge_code('hcpcs_cd_19');
-SELECT merge_code('hcpcs_cd_20');
-SELECT merge_code('hcpcs_cd_21');
-SELECT merge_code('hcpcs_cd_22');
-SELECT merge_code('hcpcs_cd_23');
-SELECT merge_code('hcpcs_cd_24');
-SELECT merge_code('hcpcs_cd_25');
-SELECT merge_code('hcpcs_cd_26');
-SELECT merge_code('hcpcs_cd_27');
-SELECT merge_code('hcpcs_cd_28');
-SELECT merge_code('hcpcs_cd_29');
-SELECT merge_code('hcpcs_cd_30');
-SELECT merge_code('hcpcs_cd_31');
-SELECT merge_code('hcpcs_cd_32');
-SELECT merge_code('hcpcs_cd_33');
-SELECT merge_code('hcpcs_cd_34');
-SELECT merge_code('hcpcs_cd_35');
-SELECT merge_code('hcpcs_cd_36');
-SELECT merge_code('hcpcs_cd_37');
-SELECT merge_code('hcpcs_cd_38');
-SELECT merge_code('hcpcs_cd_39');
-SELECT merge_code('hcpcs_cd_40');
-SELECT merge_code('hcpcs_cd_41');
-SELECT merge_code('hcpcs_cd_42');
-SELECT merge_code('hcpcs_cd_43');
-SELECT merge_code('hcpcs_cd_44');
-SELECT merge_code('hcpcs_cd_45');
-
 SELECT merge_code('icd9_dgns_cd_1');
 SELECT merge_code('icd9_dgns_cd_2');
 SELECT merge_code('icd9_dgns_cd_3');
@@ -252,8 +214,9 @@ ALTER TABLE ma_inpatientclaims DROP COLUMN segment;
 DROP TABLE IF EXISTS ma_oc_convert;
 CREATE TABLE ma_oc_convert AS TABLE ma_outpatientclaims;
 
+
 -- --------------------------------------------------------------------------------------------------------------------
--- Create conversion column for clm_id for Outpatient Claims
+--  Merge the two-segment claims within Inpatient Claims.
 -- --------------------------------------------------------------------------------------------------------------------
 
 --  Both Inpatient and Outpatient claims have multiple segments per claim.
@@ -1373,7 +1336,7 @@ ALTER TABLE ma_carrierclaims DROP COLUMN line_icd9_dgns_cd_13;
 
 
 -- --------------------------------------------------------------------------------------------------------------------
--- Correlate NDC codes to Rx Drug Events
+--  Correlate NDC codes to Rx Drug Events using an NDC index id.
 -- --------------------------------------------------------------------------------------------------------------------
 
 ALTER TABLE ma_rxdrugevents ADD COLUMN ndc11_id INTEGER;
@@ -1387,7 +1350,7 @@ ALTER TABLE ma_rxdrugevents DROP COLUMN ndc11;
 
 
 -- --------------------------------------------------------------------------------------------------------------------
--- Correlate ICD codes to each table
+-- Correlate ICD codes to each Medicare Analysis table using an ICD index id.
 -- --------------------------------------------------------------------------------------------------------------------
 
 DROP FUNCTION IF EXISTS correllate_icd;
@@ -1525,24 +1488,24 @@ WHERE a.admtng_icd9_dgns_cd = b.icd;
 ALTER TABLE ma_outpatientclaims DROP COLUMN admtng_icd9_dgns_cd;
 
 
-DROP TABLE IF EXISTS icdma_oc_icd_dgns;
-CREATE TABLE icdma_oc_icd_dgns (
+DROP TABLE IF EXISTS ma_oc_icd_dgns;
+CREATE TABLE ma_oc_icd_dgns (
     icd_id INTEGER,
     clm_id BIGINT
 );
 
-SELECT correllate_icd('ma_outpatientclaims', 'icdma_oc_icd_dgns', 'icd9_dgns_cd_1');
-SELECT correllate_icd('ma_outpatientclaims', 'icdma_oc_icd_dgns', 'icd9_dgns_cd_2');
-SELECT correllate_icd('ma_outpatientclaims', 'icdma_oc_icd_dgns', 'icd9_dgns_cd_3');
-SELECT correllate_icd('ma_outpatientclaims', 'icdma_oc_icd_dgns', 'icd9_dgns_cd_4');
-SELECT correllate_icd('ma_outpatientclaims', 'icdma_oc_icd_dgns', 'icd9_dgns_cd_5');
-SELECT correllate_icd('ma_outpatientclaims', 'icdma_oc_icd_dgns', 'icd9_dgns_cd_6');
-SELECT correllate_icd('ma_outpatientclaims', 'icdma_oc_icd_dgns', 'icd9_dgns_cd_7');
-SELECT correllate_icd('ma_outpatientclaims', 'icdma_oc_icd_dgns', 'icd9_dgns_cd_8');
-SELECT correllate_icd('ma_outpatientclaims', 'icdma_oc_icd_dgns', 'icd9_dgns_cd_9');
-SELECT correllate_icd('ma_outpatientclaims', 'icdma_oc_icd_dgns', 'icd9_dgns_cd_10');
+SELECT correllate_icd('ma_outpatientclaims', 'ma_oc_icd_dgns', 'icd9_dgns_cd_1');
+SELECT correllate_icd('ma_outpatientclaims', 'ma_oc_icd_dgns', 'icd9_dgns_cd_2');
+SELECT correllate_icd('ma_outpatientclaims', 'ma_oc_icd_dgns', 'icd9_dgns_cd_3');
+SELECT correllate_icd('ma_outpatientclaims', 'ma_oc_icd_dgns', 'icd9_dgns_cd_4');
+SELECT correllate_icd('ma_outpatientclaims', 'ma_oc_icd_dgns', 'icd9_dgns_cd_5');
+SELECT correllate_icd('ma_outpatientclaims', 'ma_oc_icd_dgns', 'icd9_dgns_cd_6');
+SELECT correllate_icd('ma_outpatientclaims', 'ma_oc_icd_dgns', 'icd9_dgns_cd_7');
+SELECT correllate_icd('ma_outpatientclaims', 'ma_oc_icd_dgns', 'icd9_dgns_cd_8');
+SELECT correllate_icd('ma_outpatientclaims', 'ma_oc_icd_dgns', 'icd9_dgns_cd_9');
+SELECT correllate_icd('ma_outpatientclaims', 'ma_oc_icd_dgns', 'icd9_dgns_cd_10');
 
-SELECT COUNT(*) FROM icdma_oc_icd_dgns;
+SELECT COUNT(*) FROM ma_oc_icd_dgns;
 
 --      RESULT: 2073796
 
@@ -1620,16 +1583,17 @@ ALTER TABLE ma_carrierclaims DROP COLUMN icd9_dgns_cd_8;
 
 ALTER TABLE ma_carrierclaims_lineitems ADD COLUMN icd_dgns_id INTEGER;
 
+
 UPDATE ma_carrierclaims_lineitems a
 SET icd_dgns_id = b.icd_id
 FROM ma_icd b
-WHERE a.icd9_dgns_cd = b.icd;
+WHERE a.icd_dgns_cd = b.icd;
 
-ALTER TABLE ma_carrierclaims_lineitems DROP COLUMN icd9_dgns_cd;
+ALTER TABLE ma_carrierclaims_lineitems DROP COLUMN icd_dgns_cd;
 
 
 -- --------------------------------------------------------------------------------------------------------------------
--- Correlate HCPCS codes to each table
+--  Correlate HCPCS codes to each Medicare Analysis table using an HCPCS index id.
 -- --------------------------------------------------------------------------------------------------------------------
 
 DROP FUNCTION IF EXISTS correllate_hcpcs;
@@ -1686,117 +1650,13 @@ $$;
 -- Inpatient Claims
 -- ------------------------------------------------------------------------------------------------
 
-DROP TABLE IF EXISTS ma_ic_hcpcs;
-CREATE TABLE ma_ic_hcpcs (
-    hcpcs_id INTEGER,
-    clm_id BIGINT
-);
-
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_1');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_2');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_3');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_4');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_5');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_6');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_7');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_8');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_9');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_10');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_11');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_12');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_13');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_14');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_15');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_16');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_17');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_18');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_19');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_20');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_21');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_22');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_23');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_24');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_25');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_26');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_27');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_28');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_29');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_30');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_31');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_32');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_33');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_34');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_35');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_36');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_37');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_38');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_39');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_40');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_41');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_42');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_43');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_44');
-SELECT correllate_hcpcs('ma_inpatientclaims', 'ma_ic_hcpcs', 'hcpcs_cd_45');
-
-SELECT COUNT(*) FROM ma_ic_hcpcs;
-
---      RESULT: 0
-
 --      THERE ARE NO HCPCS CODES ASSOCIATED WITH INPATIENT CLAIMS. This has been verified with the source CSV data.
 
 --      We can drop the ma_ic_hcpcs table entirely because it has no purpose.
 
-DROP TABLE ma_ic_hcpcs;
 
 
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_1;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_2;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_3;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_4;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_5;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_6;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_7;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_8;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_9;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_10;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_11;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_12;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_13;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_14;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_15;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_16;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_17;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_18;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_19;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_20;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_21;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_22;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_23;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_24;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_25;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_26;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_27;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_28;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_29;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_30;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_31;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_32;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_33;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_34;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_35;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_36;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_37;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_38;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_39;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_40;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_41;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_42;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_43;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_44;
-ALTER TABLE ma_inpatientclaims DROP COLUMN hcpcs_cd_45;
-
-
--- Inpatient Claims
+-- Outpatient Claims
 -- ------------------------------------------------------------------------------------------------
 
 DROP TABLE IF EXISTS ma_oc_hcpcs;
@@ -1914,68 +1774,44 @@ WHERE a.hcpcs_cd = b.hcpcs;
 
 ALTER TABLE ma_carrierclaims_lineitems DROP COLUMN hcpcs_cd;
 
-
 -- --------------------------------------------------------------------------------------------------------------------
--- Copy Medicare-Analysis Tables as Save Point
+-- Copy Medicare-Analysis Tables as Save Point 6
 -- --------------------------------------------------------------------------------------------------------------------
 
-DROP TABLE IF EXISTS ma2_bs;
-DROP TABLE IF EXISTS ma2_cc;
-DROP TABLE IF EXISTS ma2_cc_li;
-DROP TABLE IF EXISTS ma2_cc_icd_d;
-DROP TABLE IF EXISTS ma2_county;
-DROP TABLE IF EXISTS ma2_h;
-DROP TABLE IF EXISTS ma2_ic_icd_d;
-DROP TABLE IF EXISTS ma2_ic_icd_p;
-DROP TABLE IF EXISTS ma2_i;
-DROP TABLE IF EXISTS ma2_ic;
-DROP TABLE IF EXISTS ma2_l_p_i_c;
-DROP TABLE IF EXISTS ma2_n;
-DROP TABLE IF EXISTS ma2_oc_h;
-DROP TABLE IF EXISTS ma2_oc_icd_d;
-DROP TABLE IF EXISTS ma2_oc_icd_p;
-DROP TABLE IF EXISTS ma2_oc;
-DROP TABLE IF EXISTS ma2_rde;
-DROP TABLE IF EXISTS ma2_state;
+DROP TABLE IF EXISTS Save6_ma_beneficiarysummary;
+DROP TABLE IF EXISTS Save6_ma_carrierclaims;
+DROP TABLE IF EXISTS Save6_ma_carrierclaims_lineitems;
+DROP TABLE IF EXISTS Save6_ma_cc_icd_dgns;
+DROP TABLE IF EXISTS Save6_ma_hcpcs;
+DROP TABLE IF EXISTS Save6_ma_ic_icd_dgns;
+DROP TABLE IF EXISTS Save6_ma_ic_icd_prcdr;
+DROP TABLE IF EXISTS Save6_ma_icd;
+DROP TABLE IF EXISTS Save6_ma_inpatientclaims;
+DROP TABLE IF EXISTS Save6_ma_line_prcsg_ind_cd;
+DROP TABLE IF EXISTS Save6_ma_ndc;
+DROP TABLE IF EXISTS Save6_ma_oc_hcpcs;
+DROP TABLE IF EXISTS Save6_ma_oc_icd_dgns;
+DROP TABLE IF EXISTS Save6_ma_oc_icd_prcdr;
+DROP TABLE IF EXISTS Save6_ma_outpatientclaims;
+DROP TABLE IF EXISTS Save6_ma_rxdrugevents;
 
-ALTER TABLE ma_beneficiarysummary RENAME TO ma2_bs;
-ALTER TABLE ma_carrierclaims RENAME TO ma2_cc;
-ALTER TABLE ma_carrierclaims_lineitems RENAME TO ma2_cc_li;
-ALTER TABLE ma_cc_icd_dgns RENAME TO ma2_cc_icd_d;
-ALTER TABLE ma_countycodes RENAME TO ma2_county;
-ALTER TABLE ma_hcpcs RENAME TO ma2_h;
-ALTER TABLE ma_ic_icd_dgns RENAME TO ma2_ic_icd_d;
-ALTER TABLE ma_ic_icd_prcdr RENAME TO ma2_ic_icd_p;
-ALTER TABLE ma_icd RENAME TO ma2_i;
-ALTER TABLE ma_inpatientclaims RENAME TO ma2_ic;
-ALTER TABLE ma_line_prcsg_ind_cd RENAME TO ma2_l_p_i_c;
-ALTER TABLE ma_ndc RENAME TO ma2_n;
-ALTER TABLE ma_oc_hcpcs RENAME TO ma2_oc_h;
-ALTER TABLE icdma_oc_icd_dgns RENAME TO ma2_oc_icd_d;
-ALTER TABLE ma_oc_icd_prcdr RENAME TO ma2_oc_icd_p;
-ALTER TABLE ma_outpatientclaims RENAME TO ma2_oc;
-ALTER TABLE ma_rxdrugevents RENAME TO ma2_rde;
-ALTER TABLE ma_statecodes RENAME TO ma2_state;
 
-CREATE TABLE ma_beneficiarysummary AS TABLE ma2_bs;
-CREATE TABLE ma_carrierclaims AS TABLE ma2_cc;
-CREATE TABLE ma_carrierclaims_lineitems AS TABLE ma2_cc_li;
-CREATE TABLE ma_cc_icd_dgns AS TABLE ma2_cc_icd_d;
-CREATE TABLE ma_countycodes AS TABLE ma2_county;
-CREATE TABLE ma_hcpcs AS TABLE ma2_h;
-CREATE TABLE ma_ic_icd_dgns AS TABLE ma2_ic_icd_d;
-CREATE TABLE ma_ic_icd_prcdr AS TABLE ma2_ic_icd_p;
-CREATE TABLE ma_icd AS TABLE ma2_i;
-CREATE TABLE ma_inpatientclaims AS TABLE ma2_ic;
-CREATE TABLE ma_line_prcsg_ind_cd AS TABLE ma2_l_p_i_c;
-CREATE TABLE ma_ndc AS TABLE ma2_n;
-CREATE TABLE ma_oc_hcpcs AS TABLE ma2_oc_h;
-CREATE TABLE ma_oc_icd_dgns AS TABLE ma2_oc_icd_d;
-CREATE TABLE ma_oc_icd_prcdr AS TABLE ma2_oc_icd_p;
-CREATE TABLE ma_outpatientclaims AS TABLE ma2_oc;
-CREATE TABLE ma_rxdrugevents AS TABLE ma2_rde;
-CREATE TABLE ma_statecodes AS TABLE ma2_state;
-
+CREATE TABLE Save6_ma_beneficiarysummary AS TABLE ma_beneficiarysummary;
+CREATE TABLE Save6_ma_carrierclaims AS TABLE ma_carrierclaims;
+CREATE TABLE Save6_ma_carrierclaims_lineitems AS TABLE ma_carrierclaims_lineitems;
+CREATE TABLE Save6_ma_cc_icd_dgns AS TABLE ma_cc_icd_dgns;
+CREATE TABLE Save6_ma_hcpcs AS TABLE ma_hcpcs;
+CREATE TABLE Save6_ma_ic_icd_dgns AS TABLE ma_ic_icd_dgns;
+CREATE TABLE Save6_ma_ic_icd_prcdr AS TABLE ma_ic_icd_prcdr;
+CREATE TABLE Save6_ma_icd AS TABLE ma_icd;
+CREATE TABLE Save6_ma_inpatientclaims AS TABLE ma_inpatientclaims;
+CREATE TABLE Save6_ma_line_prcsg_ind_cd AS TABLE ma_line_prcsg_ind_cd;
+CREATE TABLE Save6_ma_ndc AS TABLE ma_ndc;
+CREATE TABLE Save6_ma_oc_hcpcs AS TABLE ma_oc_hcpcs;
+CREATE TABLE Save6_ma_oc_icd_dgns AS TABLE ma_oc_icd_dgns;
+CREATE TABLE Save6_ma_oc_icd_prcdr AS TABLE ma_oc_icd_prcdr;
+CREATE TABLE Save6_ma_outpatientclaims AS TABLE ma_outpatientclaims;
+CREATE TABLE Save6_ma_rxdrugevents AS TABLE ma_rxdrugevents;
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Run cleanup of dead tuples & maximize efficiency
