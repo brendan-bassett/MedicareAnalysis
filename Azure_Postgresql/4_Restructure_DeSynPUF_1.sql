@@ -2,15 +2,15 @@
 -----------------------------------------------------------------------------------------------------------------------
 	STEP 4
     
-    Prepare the de-Syn_PUF data for efficient use in Power BI.
+    Restructure the de-Syn_PUF dataset from the original "flat" style to a relational database.
 
-    ** PART 1 **
+    	** PART 1 **
 
-    The original de-Syn-PUF dataset is large and unweildy. If we try to import it into Power BI as-is then it's 
-    unusably slow to manipulate. It's also very difficult to create workable relationships.
-    
-    This involves removing extra columns nad merging tables. Also creating lookup tables for codes such as hcpcs that 
-    have multiple columns for the same category of data.
+    The original de-Syn-PUF dataset is large and inefficient. If we try to import it into Power BI as is then it's 
+    unusably slow. It's also very difficult to create workable relationships between columns with the "flat" format 
+	that is given. Here we configure the data to be more relational. This process is completed in two major steps, 
+	saving at the end of each file for easier recovery. This saves time in case some of this processing needs 
+	to be redone later.
 
 
         Summary:
