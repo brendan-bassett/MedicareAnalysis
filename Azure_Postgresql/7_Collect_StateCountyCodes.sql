@@ -58,7 +58,6 @@ CREATE TABLE ma_rxdrugevents AS TABLE Save6_ma_rxdrugevents;
 
 */
 
-/*
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Merge state & county codes into a single 5-digit standard state-county SSA code in beneficiary summary.
@@ -80,7 +79,6 @@ SET ssa_statecounty = ssa_state || ssa_county;
 ALTER TABLE ma_beneficiarysummary DROP COLUMN ssa_state_int;
 ALTER TABLE ma_beneficiarysummary DROP COLUMN ssa_county_int;
 
-*/
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Merge the SSA state codes used in the deSynPUF dataset with their latitude and longitude coordinates.
@@ -114,6 +112,9 @@ UPDATE state_codes
 SET state_name = 'OTHER', latitude = 39.8283, longitude = -98.5795
 WHERE state_code = '54';
 
+-- Change the name of the state code to standardize with beneficiary summary.
+
+ALTER TABLE state_codes RENAME COLUMN state_code TO ssa_state;
 
 -- Double-check that all of the entries in state_codes have lat & long coordinates.
 
