@@ -762,6 +762,15 @@ CREATE TABLE state_codes (
 	state_name VARCHAR
 );
 	
+DROP TABLE IF EXISTS state_coordinates;
+CREATE TABLE state_coordinates (
+	
+	state_territory VARCHAR, 
+	latitude REAL,
+	longitude REAL,
+	state_name VARCHAR
+);
+
 DROP TABLE IF EXISTS county_codes;
 CREATE TABLE county_codes (
 	
@@ -776,15 +785,6 @@ CREATE TABLE county_codes (
     ssa_county_code VARCHAR(5)
 );
 
-DROP TABLE IF EXISTS state_coordinates;
-CREATE TABLE state_coordinates (
-	
-	state_territory VARCHAR, 
-	latitude REAL,
-	longitude REAL,
-	state_name VARCHAR
-);
-	
 DROP TABLE IF EXISTS county_coordinates_fips;
 CREATE TABLE county_coordinates_fips (
 	
@@ -793,7 +793,6 @@ CREATE TABLE county_coordinates_fips (
 	longitude REAL,
 	latitude REAL
 );
-	
 
 DROP TABLE IF EXISTS county_ssa_fips_crosswalk;
 CREATE TABLE county_ssa_fips_crosswalk (

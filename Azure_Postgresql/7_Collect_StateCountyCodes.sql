@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------------------------------------------------
 */
 
+/*
 -- --------------------------------------------------------------------------------------------------------------------
 --  Load from the previous save point.
 -- --------------------------------------------------------------------------------------------------------------------
@@ -20,7 +21,6 @@
 DROP TABLE IF EXISTS ma_beneficiarysummary;
 CREATE TABLE ma_beneficiarysummary AS TABLE Save6_ma_beneficiarysummary;
 
-/*
 
 -- All the rest of the MA tables from save 6 below in case a full reload is needed.
 
@@ -58,6 +58,7 @@ CREATE TABLE ma_rxdrugevents AS TABLE Save6_ma_rxdrugevents;
 
 */
 
+/*
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Merge state & county codes into a single 5-digit standard state-county SSA code in beneficiary summary.
@@ -79,6 +80,7 @@ SET ssa_statecounty = ssa_state || ssa_county;
 ALTER TABLE ma_beneficiarysummary DROP COLUMN ssa_state_int;
 ALTER TABLE ma_beneficiarysummary DROP COLUMN ssa_county_int;
 
+*/
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Merge the SSA state codes used in the deSynPUF dataset with their latitude and longitude coordinates.
@@ -132,16 +134,6 @@ DROP TABLE IF EXISTS state_coordinates;
 -- GROUP BY bs.ssa_state;
 
 --      RESULT: null
-
-
--- Convert SSA state codes to smallint so later comparison is more efficient and standard.
-
-ALTER TABLE state_codes ADD COLUMN ssa_state SMALLINT;
-
-UPDATE state_codes
-SET ssa_state = CAST(state_code AS SMALLINT);
-
-ALTER TABLE state_codes DROP COLUMN state_code;
 
 
 -- --------------------------------------------------------------------------------------------------------------------
@@ -344,4 +336,3 @@ DROP TABLE IF EXISTS Save7_ma_countycodes;
 
 CREATE TABLE Save7_ma_statecodes AS TABLE ma_statecodes;
 CREATE TABLE Save7_ma_countycodes AS TABLE ma_countycodes;
-
