@@ -757,7 +757,7 @@ CREATE TABLE cms_rvu_2010 (
 DROP TABLE IF EXISTS state_codes;
 CREATE TABLE state_codes (
 	
-	state_code SMALLINT, 
+	state_code CHAR(2), 
 	state_abbr VARCHAR(2),
 	state_name VARCHAR
 );

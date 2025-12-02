@@ -109,3 +109,4 @@ ORDER BY per_alzhdmta DESC;
 
 */
 
+SELECT * FROM state_codes;
