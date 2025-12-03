@@ -99,7 +99,7 @@ USING
         s.ssa_state
   FROM ma_beneficiarysummary AS bs
   INNER JOIN ma_statecodes AS s
-  ON bs.ssa_state = s.ssa_state
+  ON bs.ssa_state = s.ssa_statev
   WHERE bs.sp_alzhdmta IS TRUE
   GROUP BY s.ssa_state)
   AS source
@@ -114,3 +114,96 @@ SELECT state_name, pt_count, ct_alzhdmta, per_alzhdmta
 FROM patients_by_state
 ORDER BY per_alzhdmta DESC;
 
+
+-- --------------------------------------------------------------------------------------------------------------------
+--  Add Aggregate Chronic Conditions column to Beneficiary Summary
+-- --------------------------------------------------------------------------------------------------------------------
+
+-- Create a table that defines chronic conditions and their aggregate indicators.
+
+DROP TABLE IF EXISTS ma_chronicconditions;
+CREATE TABLE ma_chronicconditions (
+    
+    condition_name VARCHAR,
+    sp_col VARCHAR,
+    indicator CHAR(1)
+);
+
+INSERT INTO ma_chronicconditions
+VALUES ('Alzheimer or Related',	                    'sp_alzhdmta', 'A'),
+        ('Heart Failure',                           'sp_chf',      'B'),
+        ('Chronic Kidney Disease',                  'sp_chrnkidn', 'C'),
+        ('Cancer',                                  'sp_cncr',     'D'),
+        ('Chronic Obstructive Pulmonary Disease',   'sp_copd',     'E'),
+        ('Depression',                              'sp_depressn', 'F'),
+        ('Diabetes',                                'sp_diabetes', 'G'),
+        ('Ischemic Heart Disease',                  'sp_ischmcht', 'H'),
+        ('Osteoporosis',                            'sp_osteoprs', 'I'),
+        ('Rheumatoid Arthritis and Osteoarthritis',	'sp_ra_oa',    'J'),
+        ('Stroke or Transient Ischemic Attack', 	  'sp_strketia', 'K');
+
+
+-- Aggregate the chronic conditions columns into one column that can contain multiple characters indicating 
+--  multiple chronic conditions.
+
+ALTER TABLE ma_beneficiarysummary ADD COLUMN chronic_conditions_aggr VARCHAR;
+
+UPDATE ma_beneficiarysummary
+SET chronic_conditions_aggr = '';
+
+UPDATE ma_beneficiarysummary
+SET chronic_conditions_aggr = chronic_conditions_aggr || 'A'
+WHERE sp_alzhdmta = TRUE;
+
+UPDATE ma_beneficiarysummary
+SET chronic_conditions_aggr = chronic_conditions_aggr || 'B'
+WHERE sp_chf = TRUE;
+
+UPDATE ma_beneficiarysummary
+SET chronic_conditions_aggr = chronic_conditions_aggr || 'C'
+WHERE sp_chrnkidn = TRUE;
+
+UPDATE ma_beneficiarysummary
+SET chronic_conditions_aggr = chronic_conditions_aggr || 'D'
+WHERE sp_cncr = TRUE;
+
+UPDATE ma_beneficiarysummary
+SET chronic_conditions_aggr = chronic_conditions_aggr || 'E'
+WHERE sp_copd = TRUE;
+
+UPDATE ma_beneficiarysummary
+SET chronic_conditions_aggr = chronic_conditions_aggr || 'F'
+WHERE sp_depressn = TRUE;
+
+UPDATE ma_beneficiarysummary
+SET chronic_conditions_aggr = chronic_conditions_aggr || 'G'
+WHERE sp_diabetes = TRUE;
+
+UPDATE ma_beneficiarysummary
+SET chronic_conditions_aggr = chronic_conditions_aggr || 'H'
+WHERE sp_ischmcht = TRUE;
+
+UPDATE ma_beneficiarysummary
+SET chronic_conditions_aggr = chronic_conditions_aggr || 'I'
+WHERE sp_osteoprs = TRUE;
+
+UPDATE ma_beneficiarysummary
+SET chronic_conditions_aggr = chronic_conditions_aggr || 'J'
+WHERE sp_ra_oa = TRUE;
+
+UPDATE ma_beneficiarysummary
+SET chronic_conditions_aggr = chronic_conditions_aggr || 'K'
+WHERE sp_strketia = TRUE;
+
+
+-- Check the results
+
+SELECT COUNT(*) FROM ma_beneficiarysummary
+WHERE sp_diabetes IS TRUE;
+
+--      RESULT:  124747
+
+SELECT COUNT(*) FROM ma_beneficiarysummary
+WHERE chronic_conditions_aggr LIKE '%G%';
+
+--      RESULT:  124747
