@@ -9,70 +9,70 @@ ________________________________________________________________________
 ma_beneficiarysummary
 ma_carrierclaims
 ma_carrierclaims_lineitems
-ma_cc_icd9_dgns
+ma_cc_icd_dgns
 ma_countycodes
 ma_hcpcs
-ma_ic_icd9_dgns
-ma_ic_icd9_prcdr
+ma_ic_hcpcs
+ma_ic_icd_dgns
+ma_ic_icd_prcdr
 ma_icd
 ma_inpatientclaims
 ma_line_prcsg_ind_cd
 ma_ndc
 ma_oc_hcpcs
-ma_oc_icd9_dgns
-ma_oc_icd9_prcdr
+ma_oc_icd_dgns
+ma_oc_icd_prcdr
 ma_outpatientclaims
 ma_rxdrugevents
 ma_statecodes
 
-    (saved de-Syn_PUF dataset after prelimnary formatting)
+    (save points at the end of each step)
 
-desynpuf_beneficiarysummary2008
-desynpuf_beneficiarysummary2009
-desynpuf_beneficiarysummary2010
-desynpuf_carrierclaims
-desynpuf_inpatientclaims
-desynpuf_outpatientclaims
-desynpuf_rxdrugevents
+save2_desynpuf_beneficiarysummary2008
+save2_desynpuf_beneficiarysummary2009
+save2_desynpuf_beneficiarysummary2010
+save2_desynpuf_carrierclaims
+save2_desynpuf_inpatientclaims
+save2_desynpuf_outpatientclaims
+save2_desynpuf_rxdrugevents
+save3_hcpcs
+save3_icd9
+save3_ndc
+save4_ma_beneficiarysummary
+save4_ma_carrierclaims
+save4_ma_hcpcs
+save4_ma_icd
+save4_ma_inpatientclaims
+save4_ma_ndc
+save4_ma_outpatientclaims
+save4_ma_rxdrugevents
+save5_ma_beneficiarysummary
+save5_ma_carrierclaims
+save5_ma_hcpcs
+save5_ma_icd
+save5_ma_inpatientclaims
+save5_ma_ndc
+save5_ma_outpatientclaims
+save5_ma_rxdrugevents
+save6_ma_beneficiarysummary
+save6_ma_carrierclaims
+save6_ma_carrierclaims_lineitems
+save6_ma_cc_icd_dgns
+save6_ma_hcpcs
+save6_ma_ic_icd_dgns
+save6_ma_ic_icd_prcdr
+save6_ma_icd
+save6_ma_inpatientclaims
+save6_ma_line_prcsg_ind_cd
+save6_ma_ndc
+save6_ma_oc_hcpcs
+save6_ma_oc_icd_dgns
+save6_ma_oc_icd_prcdr
+save6_ma_outpatientclaims
+save6_ma_rxdrugevents
+save7_ma_countycodes
+save7_ma_statecodes
 
-    (Other saved datasets after ETL and other work)
-
-county_codes
-hcpcs
-icd9
-ndc_combined
-
-    (Important tables saved after Condense_DeSynPUF_1.sql)
-
-ma1_bs
-ma1_cc
-ma1_h
-ma1_i
-ma1_ic
-ma1_n
-ma1_oc
-ma1_rde
-
-    (Important tables saved after Condense_DeSynPUF_2.sql)
-
-ma2_bs
-ma2_cc
-ma2_cc_icd_d
-ma2_cc_li
-ma2_county
-ma2_h
-ma2_i
-ma2_ic
-ma2_ic_icd_d
-ma2_ic_icd_p
-ma2_l_p_i_c
-ma2_n
-ma2_oc
-ma2_oc_h
-ma2_oc_icd_d
-ma2_oc_icd_p
-ma2_rde
-ma2_state
 
 
 ________________________________________________________________________
@@ -84,7 +84,6 @@ ________________________________________________________________________
     ma_beneficiarysummary
 -------------------------------------
 bene_birth_dt              	date
-bene_county_cd            	smallint
 bene_death_dt              	date
 bene_esrd_ind              	boolean
 bene_hi_cvrage_tot_mons 	smallint
@@ -115,8 +114,10 @@ sp_diabetes             	boolean         (Diabetes)
 sp_ischmcht             	boolean         (Ischemic Heart Disease)
 sp_osteoprs             	boolean         (Osteoporosis)
 sp_ra_oa                	boolean         (Rheumatoid Arthritis and Osteoarthritis (RA/OA))
-sp_state_code           	smallint
 sp_strketia             	boolean         (Stroke/transient Ischemic Attack)
+ssa_county              	char(3)
+ssa_state           	    char(2)
+ssa_statecounty	            char(5)
 
 Rows:               343,644
 Distinct Patients:  116,352
@@ -177,11 +178,16 @@ Rows:               10,122,005
 
     ma_countycodes
 ------------------------------------
-county	            character varying
-ssa_county_code	    character varying
-state	            character varying
+county_name	        character varying
+fips_statecounty	character varying
+latitude	        real
+longitude	        real
+ssa_county	        character varying
+ssa_state	        character varying
+ssa_statecounty	    character varying
+state_abbr	        character varying
 
-Rows:               3,288
+Rows:               3,240
 
 
     ma_hcpcs
@@ -328,8 +334,10 @@ Rows:               5,552,421
 
     ma_statecodes
 -------------------------------------
-abbreviation	character varying
-state	        character varying
-state_code	    smallint
+latitude	    real
+longitude	    real
+ssa_state	    smallint
+state_abbr	    character varying
+state_name	    character varying
 
 Rows:               52

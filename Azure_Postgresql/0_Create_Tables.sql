@@ -1,10 +1,14 @@
 /*
 -----------------------------------------------------------------------------------------------------------------------
+	STEP 0
+	
 	Create tables in Azure postgresql server so that CSV files can be imported in Azure Data Factory.
    
 	Uses only sample 1 of 20 in the De-SynPUF dataset
 -----------------------------------------------------------------------------------------------------------------------
 */
+
+/*
 
 -- --------------------------------------------------------------------------------------------------------------------
 --   Create Beneficiary Summary Tables
@@ -502,7 +506,6 @@ CREATE TABLE rx_drug_events (
 	tot_rx_cst_amt NUMERIC(8, 2)
 );
 	
-
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 -- 	Create NDC 2018 & 2025 Tables
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -662,6 +665,7 @@ CREATE TABLE NDC2012_packages (
 
 -- import the data from csv
 
+DROP TABLE IF EXISTS icd9_included;
 CREATE TABLE icd9_included (
 	
 	code VARCHAR, 
@@ -669,6 +673,7 @@ CREATE TABLE icd9_included (
 );
 
 
+DROP TABLE IF EXISTS icd9_excluded;
 CREATE TABLE icd9_excluded (
 	
 	code VARCHAR, 
@@ -680,6 +685,7 @@ CREATE TABLE icd9_excluded (
 -- 	Create HCPCS-17 Table
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
+DROP TABLE IF EXISTS hcpcs17;
 CREATE TABLE hcpcs17 (
 	
 	hcpc CHAR(5), 
@@ -698,29 +704,30 @@ CREATE TABLE hcpcs17 (
 -- 	Create CMS Relative Value Table
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
+DROP TABLE IF EXISTS cms_rvu_2010;
 CREATE TABLE cms_rvu_2010 (
 	
-	hcpcs CHAR(5), 
+	hcpcs VARCHAR, 
 	modifier VARCHAR,
-	description VARCHAR(28),
-	status CHAR(1),
-	not_used_for_medicare VARCHAR(1),
+	description VARCHAR,
+	status VARCHAR,
+	not_used_for_medicare VARCHAR,
 	work_rvu NUMERIC(8, 2),
 	transitioned_nonfac_pe_rvu NUMERIC(8, 2),
-	transitioned_nonfac_na VARCHAR(2),
+	transitioned_nonfac_na VARCHAR,
 	fully_implemented_nonfac_pe_rvu NUMERIC(8, 2),
-	fully_implemented_nonfac VARCHAR(2),
+	fully_implemented_nonfac VARCHAR,
 	transitioned_facility_pe_rvu NUMERIC(8, 2),
-	transitioned_facility VARCHAR(2),
+	transitioned_facility VARCHAR,
 	fully_implemented_facility_pe_rvu NUMERIC(8, 2),
-	fully_implemented_facility VARCHAR(2),
+	fully_implemented_facility VARCHAR,
 	mp_rvu NUMERIC(8, 2),
 	transitioned_nonfac_tot NUMERIC(8, 2),
 	fully_implemented_nonfac_tot NUMERIC(8, 2),
 	transitioned_facility_tot NUMERIC(8, 2),
 	fully_implemented_facility_tot NUMERIC(8, 2),
-	ptc_ind CHAR(1),
-	glob_days CHAR(3),
+	ptc_ind VARCHAR,
+	glob_days VARCHAR,
 	pre_op NUMERIC(8, 2),
 	intra_op NUMERIC(8, 2),
 	post_op NUMERIC(8, 2),
@@ -729,9 +736,9 @@ CREATE TABLE cms_rvu_2010 (
 	asst_at_surgery SMALLINT,
 	co_surgeons SMALLINT,
 	team_surgery SMALLINT,
-	endo_base_code VARCHAR(5),
+	endo_base_code VARCHAR,
 	conversion_factor NUMERIC(8, 4),
-	phys_supervised_diag CHAR(2),
+	phys_supervised_diag VARCHAR,
 	calc_flag SMALLINT,
 	diag_img_fam SMALLINT,
 	nonfac_pe_opp NUMERIC(8, 2),
@@ -740,21 +747,30 @@ CREATE TABLE cms_rvu_2010 (
 	
 );
 
-
-/*
------------------------------------------------------------------------------------------------------------------------
-   Create State & County Codes Tables
------------------------------------------------------------------------------------------------------------------------
 */
+
+-- --------------------------------------------------------------------------------------------------------------------
+--  Create State & County Codes Tables
+-- --------------------------------------------------------------------------------------------------------------------
+
 
 DROP TABLE IF EXISTS state_codes;
 CREATE TABLE state_codes (
 	
-	state_code SMALLINT, 
+	state_code CHAR(2), 
 	state_abbr VARCHAR(2),
 	state_name VARCHAR
 );
 	
+DROP TABLE IF EXISTS state_coordinates;
+CREATE TABLE state_coordinates (
+	
+	state_territory VARCHAR, 
+	latitude REAL,
+	longitude REAL,
+	state_name VARCHAR
+);
+
 DROP TABLE IF EXISTS county_codes;
 CREATE TABLE county_codes (
 	
@@ -769,15 +785,6 @@ CREATE TABLE county_codes (
     ssa_county_code VARCHAR(5)
 );
 
-DROP TABLE IF EXISTS state_coordinates;
-CREATE TABLE state_coordinates (
-	
-	state_territory VARCHAR, 
-	latitude REAL,
-	longitude REAL,
-	state_name VARCHAR
-);
-	
 DROP TABLE IF EXISTS county_coordinates_fips;
 CREATE TABLE county_coordinates_fips (
 	
@@ -786,7 +793,6 @@ CREATE TABLE county_coordinates_fips (
 	longitude REAL,
 	latitude REAL
 );
-	
 
 DROP TABLE IF EXISTS county_ssa_fips_crosswalk;
 CREATE TABLE county_ssa_fips_crosswalk (
@@ -800,4 +806,3 @@ CREATE TABLE county_ssa_fips_crosswalk (
 	ssastate VARCHAR, 
 	fipsstate VARCHAR
 );
-	
