@@ -36,6 +36,12 @@
 		git rm -r --cached <folder>
 
 
+// Split local CSV file using GNU Utils in Powershell
+// -----------------------------------------------------------------------------------------------------------
+
+	split -l 1200000 DE1_0_2008_to_2010_Carrier_Claims_Sample_1A.csv Carrier_Claims_1A_
+
+
 // Initialize LOCAL postgresql connection
 // -----------------------------------------------------------------------------------------------------------
 

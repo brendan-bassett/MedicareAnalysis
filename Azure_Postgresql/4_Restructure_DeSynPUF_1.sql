@@ -54,6 +54,7 @@ CREATE TABLE hcpcs AS TABLE Save3_hcpcs;
 CREATE TABLE icd9 AS TABLE Save3_icd9;
 CREATE TABLE ndc_combined AS TABLE Save3_ndc;
 
+*/
 
 -- --------------------------------------------------------------------------------------------------------------------
 -- Create Table for Line Processing Indicator Code (used in carrier claims).
@@ -539,8 +540,6 @@ UPDATE ma_icd
 SET desc_short = icd || ' - unidentified',
     desc_long = icd || ' - unidentified'
 WHERE matched = False;
-
-*/
 
 
 -- ------------------------------------------------------------------------------------------------------------------

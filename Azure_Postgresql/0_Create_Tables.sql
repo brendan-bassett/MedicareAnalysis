@@ -8,8 +8,6 @@
 -----------------------------------------------------------------------------------------------------------------------
 */
 
-/*
-
 -- --------------------------------------------------------------------------------------------------------------------
 --   Create Beneficiary Summary Tables
 -- --------------------------------------------------------------------------------------------------------------------
@@ -46,15 +44,15 @@ CREATE TABLE beneficiary_summary_2008 (
 	sp_ra_oa SMALLINT,
 	sp_strketia SMALLINT,
 
-	medreimb_ip NUMERIC(8, 2),
-	benres_ip NUMERIC(8, 2),
-	pppymt_ip NUMERIC(8, 2),
-	medreimb_op NUMERIC(8, 2),
-	benres_op NUMERIC(8, 2),
-	pppymt_op NUMERIC(8, 2),
-	medreimb_car NUMERIC(8, 2),
-	benres_car NUMERIC(8, 2),
-	pppymt_car NUMERIC(8, 2)
+	medreimb_ip INTEGER,
+	benres_ip INTEGER,
+	pppymt_ip INTEGER,
+	medreimb_op INTEGER,
+	benres_op INTEGER,
+	pppymt_op INTEGER,
+	medreimb_car INTEGER,
+	benres_car INTEGER,
+	pppymt_car INTEGER
 );
 
 
@@ -87,15 +85,15 @@ CREATE TABLE beneficiary_summary_2009 (
 	sp_ra_oa SMALLINT,
 	sp_strketia SMALLINT,
 
-	medreimb_ip NUMERIC(8, 2),
-	benres_ip NUMERIC(8, 2),
-	pppymt_ip NUMERIC(8, 2),
-	medreimb_op NUMERIC(8, 2),
-	benres_op NUMERIC(8, 2),
-	pppymt_op NUMERIC(8, 2),
-	medreimb_car NUMERIC(8, 2),
-	benres_car NUMERIC(8, 2),
-	pppymt_car NUMERIC(8, 2)
+	medreimb_ip INTEGER,
+	benres_ip INTEGER,
+	pppymt_ip INTEGER,
+	medreimb_op INTEGER,
+	benres_op INTEGER,
+	pppymt_op INTEGER,
+	medreimb_car INTEGER,
+	benres_car INTEGER,
+	pppymt_car INTEGER
 );
 
 
@@ -128,15 +126,15 @@ CREATE TABLE beneficiary_summary_2010 (
 	sp_ra_oa SMALLINT,
 	sp_strketia SMALLINT,
 
-	medreimb_ip NUMERIC(8, 2),
-	benres_ip NUMERIC(8, 2),
-	pppymt_ip NUMERIC(8, 2),
-	medreimb_op NUMERIC(8, 2),
-	benres_op NUMERIC(8, 2),
-	pppymt_op NUMERIC(8, 2),
-	medreimb_car NUMERIC(8, 2),
-	benres_car NUMERIC(8, 2),
-	pppymt_car NUMERIC(8, 2)
+	medreimb_ip INTEGER,
+	benres_ip INTEGER,
+	pppymt_ip INTEGER,
+	medreimb_op INTEGER,
+	benres_op INTEGER,
+	pppymt_op INTEGER,
+	medreimb_car INTEGER,
+	benres_car INTEGER,
+	pppymt_car INTEGER
 );
 
 
@@ -152,8 +150,8 @@ CREATE TABLE inpatient_claims (
 	clm_from_dt DATE,
 	clm_thru_dt DATE,
 	prvdr_num CHAR(6),
-	clm_pmt_amt NUMERIC(8, 2),
-	nch_prmry_pyr_clm_pd_amt NUMERIC(8, 2),
+	clm_pmt_amt INTEGER,
+	nch_prmry_pyr_clm_pd_amt INTEGER,
 
 	at_physn_npi BIGINT,
 	op_physn_npi BIGINT,
@@ -161,10 +159,10 @@ CREATE TABLE inpatient_claims (
 
 	clm_admsn_dt DATE,
 	admtng_icd9_dgns_cd VARCHAR(5), 
-	clm_pass_thru_per_diem_amt NUMERIC(8, 2),
-	nch_bene_ip_ddctbl_amt NUMERIC(8, 2),
-	nch_bene_pta_coinsrnc_lblty_am NUMERIC(8, 2),
-	nch_bene_blood_ddctbl_lblty_am NUMERIC(8, 2),
+	clm_pass_thru_per_diem_amt INTEGER,
+	nch_bene_ip_ddctbl_amt INTEGER,
+	nch_bene_pta_coinsrnc_lblty_am INTEGER,
+	nch_bene_blood_ddctbl_lblty_am INTEGER,
 	clm_utlztn_day_cnt SMALLINT,
 	nch_bene_dschrg_dt DATE,
 	clm_drg_cd VARCHAR(3), 
@@ -247,14 +245,14 @@ CREATE TABLE outpatient_claims (
 	clm_from_dt DATE,
 	clm_thru_dt DATE,
 	prvdr_num CHAR(6),
-	clm_pmt_amt NUMERIC(8, 2),
-	nch_prmry_pyr_clm_pd_amt NUMERIC(8, 2),
+	clm_pmt_amt INTEGER,
+	nch_prmry_pyr_clm_pd_amt INTEGER,
 
 	at_physn_npi BIGINT,
 	op_physn_npi BIGINT,
 	ot_physn_npi BIGINT,
 
-	nch_bene_blood_ddctbl_lblty_am NUMERIC(8, 2),
+	nch_bene_blood_ddctbl_lblty_am INTEGER,
 
 	icd9_dgns_cd_1 VARCHAR(5), 
 	icd9_dgns_cd_2 VARCHAR(5), 
@@ -274,8 +272,8 @@ CREATE TABLE outpatient_claims (
 	icd9_prcdr_cd_5 VARCHAR(5), 
 	icd9_prcdr_cd_6 VARCHAR(5), 
 	
-	nch_bene_ptb_ddctbl_amt NUMERIC(8, 2),
-	nch_bene_ptb_coinsrnc_amt NUMERIC(8, 2),
+	nch_bene_ptb_ddctbl_amt INTEGER,
+	nch_bene_ptb_coinsrnc_amt INTEGER,
 	admtng_icd9_dgns_cd VARCHAR(5),
 
 	hcpcs_cd_1 VARCHAR(5), 
@@ -388,75 +386,75 @@ CREATE TABLE outpatient_claims (
 		hcpcs_cd_12 VARCHAR(5), 
 		hcpcs_cd_13 VARCHAR(5), 
 	
-		line_nch_pmt_amt_1 NUMERIC(8, 2),
-		line_nch_pmt_amt_2 NUMERIC(8, 2),
-		line_nch_pmt_amt_3 NUMERIC(8, 2),
-		line_nch_pmt_amt_4 NUMERIC(8, 2),
-		line_nch_pmt_amt_5 NUMERIC(8, 2),
-		line_nch_pmt_amt_6 NUMERIC(8, 2),
-		line_nch_pmt_amt_7 NUMERIC(8, 2),
-		line_nch_pmt_amt_8 NUMERIC(8, 2),
-		line_nch_pmt_amt_9 NUMERIC(8, 2),
-		line_nch_pmt_amt_10 NUMERIC(8, 2),
-		line_nch_pmt_amt_11 NUMERIC(8, 2),
-		line_nch_pmt_amt_12 NUMERIC(8, 2),
-		line_nch_pmt_amt_13 NUMERIC(8, 2),
+		line_nch_pmt_amt_1 INTEGER,
+		line_nch_pmt_amt_2 INTEGER,
+		line_nch_pmt_amt_3 INTEGER,
+		line_nch_pmt_amt_4 INTEGER,
+		line_nch_pmt_amt_5 INTEGER,
+		line_nch_pmt_amt_6 INTEGER,
+		line_nch_pmt_amt_7 INTEGER,
+		line_nch_pmt_amt_8 INTEGER,
+		line_nch_pmt_amt_9 INTEGER,
+		line_nch_pmt_amt_10 INTEGER,
+		line_nch_pmt_amt_11 INTEGER,
+		line_nch_pmt_amt_12 INTEGER,
+		line_nch_pmt_amt_13 INTEGER,
 	
-		line_bene_ptb_ddctbl_amt_1 NUMERIC(8, 2),
-		line_bene_ptb_ddctbl_amt_2 NUMERIC(8, 2),
-		line_bene_ptb_ddctbl_amt_3 NUMERIC(8, 2),
-		line_bene_ptb_ddctbl_amt_4 NUMERIC(8, 2),
-		line_bene_ptb_ddctbl_amt_5 NUMERIC(8, 2),
-		line_bene_ptb_ddctbl_amt_6 NUMERIC(8, 2),
-		line_bene_ptb_ddctbl_amt_7 NUMERIC(8, 2),
-		line_bene_ptb_ddctbl_amt_8 NUMERIC(8, 2),
-		line_bene_ptb_ddctbl_amt_9 NUMERIC(8, 2),
-		line_bene_ptb_ddctbl_amt_10 NUMERIC(8, 2),
-		line_bene_ptb_ddctbl_amt_11 NUMERIC(8, 2),
-		line_bene_ptb_ddctbl_amt_12 NUMERIC(8, 2),
-		line_bene_ptb_ddctbl_amt_13 NUMERIC(8, 2),
+		line_bene_ptb_ddctbl_amt_1 INTEGER,
+		line_bene_ptb_ddctbl_amt_2 INTEGER,
+		line_bene_ptb_ddctbl_amt_3 INTEGER,
+		line_bene_ptb_ddctbl_amt_4 INTEGER,
+		line_bene_ptb_ddctbl_amt_5 INTEGER,
+		line_bene_ptb_ddctbl_amt_6 INTEGER,
+		line_bene_ptb_ddctbl_amt_7 INTEGER,
+		line_bene_ptb_ddctbl_amt_8 INTEGER,
+		line_bene_ptb_ddctbl_amt_9 INTEGER,
+		line_bene_ptb_ddctbl_amt_10 INTEGER,
+		line_bene_ptb_ddctbl_amt_11 INTEGER,
+		line_bene_ptb_ddctbl_amt_12 INTEGER,
+		line_bene_ptb_ddctbl_amt_13 INTEGER,
 	
-		line_bene_prmry_pyr_pd_amt_1 NUMERIC(8, 2),
-		line_bene_prmry_pyr_pd_amt_2 NUMERIC(8, 2),
-		line_bene_prmry_pyr_pd_amt_3 NUMERIC(8, 2),
-		line_bene_prmry_pyr_pd_amt_4 NUMERIC(8, 2),
-		line_bene_prmry_pyr_pd_amt_5 NUMERIC(8, 2),
-		line_bene_prmry_pyr_pd_amt_6 NUMERIC(8, 2),
-		line_bene_prmry_pyr_pd_amt_7 NUMERIC(8, 2),
-		line_bene_prmry_pyr_pd_amt_8 NUMERIC(8, 2),
-		line_bene_prmry_pyr_pd_amt_9 NUMERIC(8, 2),
-		line_bene_prmry_pyr_pd_amt_10 NUMERIC(8, 2),
-		line_bene_prmry_pyr_pd_amt_11 NUMERIC(8, 2),
-		line_bene_prmry_pyr_pd_amt_12 NUMERIC(8, 2),
-		line_bene_prmry_pyr_pd_amt_13 NUMERIC(8, 2),
+		line_bene_prmry_pyr_pd_amt_1 INTEGER,
+		line_bene_prmry_pyr_pd_amt_2 INTEGER,
+		line_bene_prmry_pyr_pd_amt_3 INTEGER,
+		line_bene_prmry_pyr_pd_amt_4 INTEGER,
+		line_bene_prmry_pyr_pd_amt_5 INTEGER,
+		line_bene_prmry_pyr_pd_amt_6 INTEGER,
+		line_bene_prmry_pyr_pd_amt_7 INTEGER,
+		line_bene_prmry_pyr_pd_amt_8 INTEGER,
+		line_bene_prmry_pyr_pd_amt_9 INTEGER,
+		line_bene_prmry_pyr_pd_amt_10 INTEGER,
+		line_bene_prmry_pyr_pd_amt_11 INTEGER,
+		line_bene_prmry_pyr_pd_amt_12 INTEGER,
+		line_bene_prmry_pyr_pd_amt_13 INTEGER,
 	
-		line_coinsrnc_amt_1 NUMERIC(8, 2),
-		line_coinsrnc_amt_2 NUMERIC(8, 2),
-		line_coinsrnc_amt_3 NUMERIC(8, 2),
-		line_coinsrnc_amt_4 NUMERIC(8, 2),
-		line_coinsrnc_amt_5 NUMERIC(8, 2),
-		line_coinsrnc_amt_6 NUMERIC(8, 2),
-		line_coinsrnc_amt_7 NUMERIC(8, 2),
-		line_coinsrnc_amt_8 NUMERIC(8, 2),
-		line_coinsrnc_amt_9 NUMERIC(8, 2),
-		line_coinsrnc_amt_10 NUMERIC(8, 2),
-		line_coinsrnc_amt_11 NUMERIC(8, 2),
-		line_coinsrnc_amt_12 NUMERIC(8, 2),
-		line_coinsrnc_amt_13 NUMERIC(8, 2),
+		line_coinsrnc_amt_1 INTEGER,
+		line_coinsrnc_amt_2 INTEGER,
+		line_coinsrnc_amt_3 INTEGER,
+		line_coinsrnc_amt_4 INTEGER,
+		line_coinsrnc_amt_5 INTEGER,
+		line_coinsrnc_amt_6 INTEGER,
+		line_coinsrnc_amt_7 INTEGER,
+		line_coinsrnc_amt_8 INTEGER,
+		line_coinsrnc_amt_9 INTEGER,
+		line_coinsrnc_amt_10 INTEGER,
+		line_coinsrnc_amt_11 INTEGER,
+		line_coinsrnc_amt_12 INTEGER,
+		line_coinsrnc_amt_13 INTEGER,
 	
-		line_alowd_chrg_amt_1 NUMERIC(8, 2),
-		line_alowd_chrg_amt_2 NUMERIC(8, 2),
-		line_alowd_chrg_amt_3 NUMERIC(8, 2),
-		line_alowd_chrg_amt_4 NUMERIC(8, 2),
-		line_alowd_chrg_amt_5 NUMERIC(8, 2),
-		line_alowd_chrg_amt_6 NUMERIC(8, 2),
-		line_alowd_chrg_amt_7 NUMERIC(8, 2),
-		line_alowd_chrg_amt_8 NUMERIC(8, 2),
-		line_alowd_chrg_amt_9 NUMERIC(8, 2),
-		line_alowd_chrg_amt_10 NUMERIC(8, 2),
-		line_alowd_chrg_amt_11 NUMERIC(8, 2),
-		line_alowd_chrg_amt_12 NUMERIC(8, 2),
-		line_alowd_chrg_amt_13 NUMERIC(8, 2),
+		line_alowd_chrg_amt_1 INTEGER,
+		line_alowd_chrg_amt_2 INTEGER,
+		line_alowd_chrg_amt_3 INTEGER,
+		line_alowd_chrg_amt_4 INTEGER,
+		line_alowd_chrg_amt_5 INTEGER,
+		line_alowd_chrg_amt_6 INTEGER,
+		line_alowd_chrg_amt_7 INTEGER,
+		line_alowd_chrg_amt_8 INTEGER,
+		line_alowd_chrg_amt_9 INTEGER,
+		line_alowd_chrg_amt_10 INTEGER,
+		line_alowd_chrg_amt_11 INTEGER,
+		line_alowd_chrg_amt_12 INTEGER,
+		line_alowd_chrg_amt_13 INTEGER,
 	
 		line_prcsg_ind_cd_1 CHAR(1),
 		line_prcsg_ind_cd_2 CHAR(1),
@@ -502,8 +500,8 @@ CREATE TABLE rx_drug_events (
 									-- Exceeds the limits of bigint. Must be char
 	qty_dspnsd_num NUMERIC(6, 3), 	-- 0.000 precision 
 	days_suply_num SMALLINT, 
-	ptnt_pay_amt NUMERIC(8, 2), 
-	tot_rx_cst_amt NUMERIC(8, 2)
+	ptnt_pay_amt INTEGER, 
+	tot_rx_cst_amt INTEGER
 );
 	
 -- ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -746,8 +744,6 @@ CREATE TABLE cms_rvu_2010 (
 	mp_opp NUMERIC(8, 2)
 	
 );
-
-*/
 
 -- --------------------------------------------------------------------------------------------------------------------
 --  Create State & County Codes Tables
