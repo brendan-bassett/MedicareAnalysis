@@ -3,6 +3,8 @@
 	STEP 3
     
     Combine the imported NDC, HCPCS, and ICD information into complete tables of each.
+
+    (3 min processing time)
 -----------------------------------------------------------------------------------------------------------------------
 */
 

@@ -3,7 +3,9 @@
 	STEP 2
    
    Perform some simple conversions on the imported de-Syn_PUF dataset so they are more usable.
-   (3-5 min processing time)
+
+   (3-5 min processing time - data part 1 only)
+   (90-120 min processing time - data part 1 through 3)
 -----------------------------------------------------------------------------------------------------------------------
 */
 
@@ -248,6 +250,14 @@ ALTER TABLE rx_drug_events RENAME COLUMN prod_srvc_id TO ndc11;
 --            using Azure Data Factory. I.E. save point after step 2.
 --      The MA tables will be the ones actively used throughout the project in future steps.
 -- --------------------------------------------------------------------------------------------------------------------
+
+DROP TABLE IF EXISTS Save2_desynpuf_beneficiarysummary2008;
+DROP TABLE IF EXISTS Save2_desynpuf_beneficiarysummary2009;
+DROP TABLE IF EXISTS Save2_desynpuf_beneficiarysummary2010;
+DROP TABLE IF EXISTS Save2_desynpuf_carrierclaims;
+DROP TABLE IF EXISTS Save2_desynpuf_inpatientclaims;
+DROP TABLE IF EXISTS Save2_desynpuf_outpatientclaims;
+DROP TABLE IF EXISTS Save2_desynpuf_rxdrugevents;
 
 ALTER TABLE beneficiary_summary_2008 RENAME TO Save2_desynpuf_beneficiarysummary2008;
 ALTER TABLE beneficiary_summary_2009 RENAME TO Save2_desynpuf_beneficiarysummary2009;
